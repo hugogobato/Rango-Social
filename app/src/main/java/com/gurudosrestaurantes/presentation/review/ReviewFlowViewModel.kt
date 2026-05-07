@@ -142,6 +142,10 @@ class ReviewFlowViewModel @Inject constructor(
         draft.update { it.copy(restaurant = restaurant) }
     }
 
+    fun clearRestaurant() {
+        draft.update { it.copy(restaurant = null) }
+    }
+
     fun toggleOnlyVisited() {
         draft.update {
             val newValue = !it.onlyVisited

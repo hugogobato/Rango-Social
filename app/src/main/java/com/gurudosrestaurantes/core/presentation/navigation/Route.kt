@@ -10,6 +10,9 @@ sealed class Route(val path: String) {
     // Detail routes (placeholder for now; built out in later phases)
     data object Search : Route("search")
     data object Roulette : Route("roulette")
+    data object Map : Route("map")
+    data object Lists : Route("lists")
+    data object Groups : Route("groups")
     data object RestaurantDetail : Route("restaurant/{restaurantId}") {
         fun build(restaurantId: String) = "restaurant/$restaurantId"
     }

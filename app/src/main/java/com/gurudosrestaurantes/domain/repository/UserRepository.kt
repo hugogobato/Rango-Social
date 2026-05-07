@@ -27,4 +27,7 @@ interface UserRepository {
     suspend fun isFollowing(userId: String): Boolean
 
     suspend fun searchUsers(query: String): List<User>
+
+    /** Persist a mutated User. Updates both the current-user state and the user list. */
+    suspend fun updateUser(user: User)
 }

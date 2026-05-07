@@ -57,4 +57,11 @@ class FakeUserRepositoryImpl @Inject constructor() : UserRepository {
             it.username.lowercase().contains(q) || it.displayName.lowercase().contains(q)
         }
     }
+
+    override suspend fun updateUser(user: User) {
+        usersFlow.value = usersFlow.value.map { if (it.id == user.id) user else it }
+        if (currentUserFlow.value?.id == user.id) {
+            currentUserFlow.value = user
+        }
+    }
 }
