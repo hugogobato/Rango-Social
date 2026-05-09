@@ -100,21 +100,21 @@ fun HomeScreen(
             )
 
             Box(modifier = Modifier.fillMaxSize()) {
-                AnimatedVisibility(
+                this@Column.AnimatedVisibility(
                     visible = uiState.isLoading,
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
                     LoadingState()
                 }
-                AnimatedVisibility(
+                this@Column.AnimatedVisibility(
                     visible = !uiState.isLoading && uiState.feed.isEmpty(),
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
                     EmptyState()
                 }
-                AnimatedVisibility(
+                this@Column.AnimatedVisibility(
                     visible = !uiState.isLoading && uiState.feed.isNotEmpty(),
                     enter = fadeIn(),
                     exit = fadeOut(),

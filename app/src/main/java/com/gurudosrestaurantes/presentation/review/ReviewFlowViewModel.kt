@@ -97,6 +97,7 @@ class ReviewFlowViewModel @Inject constructor(
             }
         }
 
+    @Suppress("UNCHECKED_CAST")
     val uiState: StateFlow<ReviewFlowUiState> = combine(
         draft,
         step,
@@ -110,9 +111,8 @@ class ReviewFlowViewModel @Inject constructor(
         val d = values[0] as ReviewDraft
         val s = values[1] as ReviewStep
         val q = values[2] as String
-        @Suppress("UNCHECKED_CAST")
-        val (results, searching) = values[3] as Pair<List<Restaurant>, Boolean>
-        @Suppress("UNCHECKED_CAST")
+        val resultsPair = values[3] as Pair<List<Restaurant>, Boolean>
+        val (results, searching) = resultsPair
         val groups = values[4] as List<Group>
         val user = values[5] as User?
         val posting = values[6] as Boolean

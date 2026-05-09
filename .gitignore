@@ -1,20 +1,70 @@
+# Android / Gradle build artifacts
+.gradle/
+build/
+*/build/
+*.apk
+*.aar
+*.ap_
+*.dex
+
+# IDE settings - Android Studio / IntelliJ / VS Code
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.navigation/
+captures/
+.settings/
+.project
+.classpath
+.vscode/
+
+# Local configuration (Private/Sensitive)
+# These files contain local paths or keys that shouldn't be shared
 local.properties
-*.Zone.Identifier
-
-# App build outputs
-/app/build
-/app/release
-
-# Keystore
-*.keystore
+google-services.json
 *.jks
-release-keys.json
+*.keystore
+*.p12
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# NTFS ADS (Alternate Data Streams) / Windows metadata
+# This targets files like .gitignore:Zone.Identifier
+*:Zone.Identifier
+*.Identifier
+
+# Hilt / Dagger generated sources
+# This ensures the Hilt_MainActivity and other generated boilerplate stay out of Git
+**/hilt_aggregated_deps/
+**/dagger.hilt.android.internal.lifecycle.DefaultViewModelFactories
+**/dagger.hilt.internal.aggregatedroot.codegen/
+**/Hilt_*.java
+**/Hilt_*.kt
+
+# Room / SQL Schema exports
+schemas/
+
+# Log files
+*.log
+
+# Android Studio LINT
+lint/
+
+# Proguard / R8 mapping files
+proguard/
+
+# Temporary files
+.temp/
+temp/
+*.tmp
+*.bak
+
+# Merged resources and intermediates
+# (Though build/ covers these, adding specific patterns for clarity)
+**/intermediates/
+**/generated/
+**/merged/
+**/bin/
+**/gen/

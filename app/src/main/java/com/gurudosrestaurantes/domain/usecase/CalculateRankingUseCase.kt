@@ -17,6 +17,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlin.math.min
 import javax.inject.Inject
+import kotlinx.datetime.minus
 
 /**
  * Computes the public ranking using the spec §7 formula:
