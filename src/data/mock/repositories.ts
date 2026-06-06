@@ -46,6 +46,7 @@ import {
   vibeChecks as initialVibeChecks,
   notifications as initialNotifications,
 } from './fixtures'
+import { calculateElo } from '../../domain/logic/elo'
 
 // Mutable In-Memory Database States
 let usersState = [...allUsers]
@@ -524,6 +525,25 @@ export class MockDuelRepository implements DuelRepository {
       createdAt: new Date().toISOString(),
     }
     restaurantDuelsState = [...restaurantDuelsState, newDuel]
+
+    // Calculate and update ELOs
+    const restA = restaurantsState.find((r) => r.id === duel.aId)
+    const restB = restaurantsState.find((r) => r.id === duel.bId)
+    if (restA && restB) {
+      const oldRatingA = restA.eloByCuisine[duel.cuisine] || 1000
+      const oldRatingB = restB.eloByCuisine[duel.cuisine] || 1000
+      const outcome = duel.winnerId === duel.aId ? 'A_win' : 'B_win'
+      const { ratingA: newRatingA, ratingB: newRatingB } = calculateElo(
+        oldRatingA,
+        oldRatingB,
+        outcome
+      )
+
+      // Update ELOs in lists & models
+      await this.updateElo(restA.id, duel.cuisine, newRatingA)
+      await this.updateElo(restB.id, duel.cuisine, newRatingB)
+    }
+
     return newDuel
   }
   async getEloLeaderboard(cuisine: RestaurantCategory): Promise<CuisineElo[]> {

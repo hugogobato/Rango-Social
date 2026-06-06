@@ -1,10 +1,19 @@
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Home, Trophy, Plus, Bell, User, Sparkles } from 'lucide-react'
 import { copy } from '../copy/pt-BR'
 
 export function AppShell() {
   const location = useLocation()
+  const navigate = useNavigate()
   const currentPath = location.pathname
+
+  useEffect(() => {
+    const completed = localStorage.getItem('hasCompletedOnboarding') === 'true'
+    if (!completed) {
+      navigate('/onboarding')
+    }
+  }, [navigate])
 
   const isTabActive = (path: string) => {
     if (path === '/' && currentPath === '/') return true
