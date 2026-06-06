@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
-import { Sparkles, Trophy, Plus, MapPin, MessageSquare, Heart, Bookmark } from 'lucide-react'
+import { Sparkles, Trophy, Plus, MapPin } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
-import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { useRestaurants, useReviews, useStories } from '../../lib/query/hooks'
+import { ReviewCard } from '../../components/shared/ReviewCard'
 import { copy } from '../../copy/pt-BR'
 
 export function HomeScreen() {
@@ -152,55 +152,7 @@ export function HomeScreen() {
         ) : reviews && reviews.length > 0 ? (
           <div className="space-y-4">
             {reviews.slice(0, 3).map((review) => (
-              <Card key={review.id} className="border-[#2D2D2D] bg-[#1A1A1A] p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Avatar
-                      src={review.user?.avatarUrl || undefined}
-                      fallback={review.userId.replace('u_', '').slice(0, 2).toUpperCase()}
-                      size="sm"
-                    />
-                    <div>
-                      <p className="text-xs font-bold text-white">@{review.userId.replace('u_', '')}</p>
-                      <p className="text-[10px] text-[#808080]">Mandou a real</p>
-                    </div>
-                  </div>
-                  {review.overallScore && (
-                    <span className="text-xs font-bold text-primary">🌶️ {review.overallScore}/5</span>
-                  )}
-                </div>
-
-                <div>
-                  <Link to={`/restaurant/${review.restaurantId}`} className="text-xs font-bold text-white hover:underline flex items-center gap-1">
-                    📍 {review.restaurant?.name || 'Restaurante'}
-                  </Link>
-                  {review.comment && (
-                    <p className="text-xs text-[#D0D0D0] mt-1 leading-relaxed">
-                      "{review.comment}"
-                    </p>
-                  )}
-                </div>
-
-                {review.totalSpent && review.partySize && (
-                  <div className="text-[10px] text-[#A0A0A0] bg-[#2A2A2A]/50 px-2 py-1 rounded w-max">
-                    💸 R$ {(review.totalSpent / review.partySize).toFixed(0)}/pessoa
-                  </div>
-                )}
-
-                <div className="flex items-center gap-4 pt-1 text-[#808080] border-t border-[#2A2A2A]">
-                  <button className="flex items-center gap-1 hover:text-white transition-colors text-[11px] font-semibold">
-                    <Heart size={13} />
-                    <span>{review.likes}</span>
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-white transition-colors text-[11px] font-semibold">
-                    <MessageSquare size={13} />
-                    <span>{review.comments.length}</span>
-                  </button>
-                  <button className="ml-auto hover:text-white transition-colors">
-                    <Bookmark size={13} />
-                  </button>
-                </div>
-              </Card>
+              <ReviewCard key={review.id} review={review} />
             ))}
           </div>
         ) : (
