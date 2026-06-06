@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { Providers } from './app/providers'
 import { router } from './app/router'
+import { Capacitor } from '@capacitor/core'
+import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
@@ -12,3 +14,8 @@ createRoot(document.getElementById('root')!).render(
     </Providers>
   </StrictMode>
 )
+
+// Register service worker on web only to avoid cache conflicts on native
+if (!Capacitor.isNativePlatform()) {
+  registerSW({ immediate: true })
+}
