@@ -109,9 +109,14 @@ export class MockRestaurantRepository implements RestaurantRepository {
     )
   }
   async updateRestaurant(restaurant: Restaurant): Promise<Restaurant> {
-    restaurantsState = restaurantsState.map((r) =>
-      r.id === restaurant.id ? restaurant : r
-    )
+    const exists = restaurantsState.some((r) => r.id === restaurant.id)
+    if (exists) {
+      restaurantsState = restaurantsState.map((r) =>
+        r.id === restaurant.id ? restaurant : r
+      )
+    } else {
+      restaurantsState = [...restaurantsState, restaurant]
+    }
     return restaurant
   }
 }

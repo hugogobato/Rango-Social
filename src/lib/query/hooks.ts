@@ -38,6 +38,14 @@ export function useUpdateUser() {
   })
 }
 
+export function useFollowing(userId: string) {
+  return useQuery({
+    queryKey: ['following', userId],
+    queryFn: () => db.users.observeFollowing(userId),
+    enabled: !!userId,
+  })
+}
+
 // ==========================================
 // RESTAURANT HOOKS
 // ==========================================
@@ -57,6 +65,18 @@ export function useRestaurant(id: string) {
     queryKey: ['restaurants', id],
     queryFn: () => db.restaurants.getRestaurantById(id),
     enabled: !!id,
+  })
+}
+
+export function useUpdateRestaurant() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (restaurant: Parameters<typeof db.restaurants.updateRestaurant>[0]) =>
+      db.restaurants.updateRestaurant(restaurant),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['restaurants'] })
+      queryClient.invalidateQueries({ queryKey: ['restaurants', data.id] })
+    },
   })
 }
 
