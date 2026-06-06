@@ -1,10 +1,11 @@
 # Guru dos Restaurantes (GR) — Especificação Técnica Completa (v2.0)
+
 **Plataforma:** Android Nativo (Kotlin + Jetpack Compose)  
 **Público-Alvo:** Brasil — Gen Z & Gen Alpha  
 **Tom:** Casual, irreverente, 100% pt-BR com gírias atualizadas. Parece conversa de WhatsApp entre amigos.  
-**Arquitetura:** Clean Architecture + MVVM + Repository Pattern + Hilt DI  
+**Arquitetura:** Clean Architecture + MVVM + Repository Pattern + Hilt DI
 
-> **Como usar:** Salve este arquivo como `app_spec.md`. Ao iniciar o assistente de código, diga: *"Leia o app_spec.md e vamos construir o app fase por fase, começando pelo setup do projeto e tema visual."*
+> **Como usar:** Salve este arquivo como `app_spec.md`. Ao iniciar o assistente de código, diga: _"Leia o app_spec.md e vamos construir o app fase por fase, começando pelo setup do projeto e tema visual."_
 
 ---
 
@@ -12,32 +13,33 @@
 
 Todo texto da UI deve seguir este dicionário. Nunca use português formal corporativo.
 
-| Conceito Formal | Copy Oficial no App | Contexto |
-|---|---|---|
-| Avaliar / Review | `Mandar a real`, `Dar o papo`, `Avaliar o rango` | Botões, CTAs |
-| Sem nota / Só visita | `Só colei lá`, `Dei um pulo`, `Fui dar uma olhada` | Opção de review sem nota |
-| Em alta / Trending | `Tá bombando`, `No hype`, `Virou febre` | Aba de trending, badges |
-| Lugar ruim | `Flopou`, `Não tankei`, `Decepcionou` | Reviews negativos |
-| Lugar muito bom | `Amassei`, `Rango de cria`, `Muito aesthetic`, `100% vibes` | Reviews positivos |
-| Publicar | `Lançar a braba`, `Postar`, `Mandar ver` | Botão de submit |
-| Amigos | `Bonde`, `Chegados`, `Parça`, `Cria` | Seção social |
-| Seguir (usuário) | `Acompanhar`, `Tá na minha lista` | Botão de follow |
-| Grupos | `Tropa`, `Squad`, `Gangue` | Navegação de grupos |
-| Wishlist | `Quero ir`, `Salvei`, `Na mira` | Ícone de bookmark |
-| Listas | `Minhas listas`, `Meus rolês` | Perfil |
-| Ranking | `Top da galera`, `Quem tá no topo` | Aba de ranking |
-| Notificações | `Fofoca`, `O que tá rolando` | Badge, tela |
-| Perfil | `Meu perfil`, `Minha área` | Bottom nav |
-| Comentários | `Resenha`, `Papo` | Threads de review |
-| Curtir | `Amei`, `Fogo`, `Mandou bem` | Like button |
-| Buscar | `Achar rango`, `Onde vou?` | Search bar |
-| Filtros | `Refinar o rolê` | Bottom sheet de filtros |
-| Configurações | `Ajustes`, `Meu esquema` | Settings |
-| Sair / Logout | `Fui`, `Vazar` | — |
-| Carregando | `Preparando o rolê...`, `Só um seg...` | Loading states |
-| Erro | `Deu ruim`, `Algo flopou` | Error states |
+| Conceito Formal      | Copy Oficial no App                                         | Contexto                 |
+| -------------------- | ----------------------------------------------------------- | ------------------------ |
+| Avaliar / Review     | `Mandar a real`, `Dar o papo`, `Avaliar o rango`            | Botões, CTAs             |
+| Sem nota / Só visita | `Só colei lá`, `Dei um pulo`, `Fui dar uma olhada`          | Opção de review sem nota |
+| Em alta / Trending   | `Tá bombando`, `No hype`, `Virou febre`                     | Aba de trending, badges  |
+| Lugar ruim           | `Flopou`, `Não tankei`, `Decepcionou`                       | Reviews negativos        |
+| Lugar muito bom      | `Amassei`, `Rango de cria`, `Muito aesthetic`, `100% vibes` | Reviews positivos        |
+| Publicar             | `Lançar a braba`, `Postar`, `Mandar ver`                    | Botão de submit          |
+| Amigos               | `Bonde`, `Chegados`, `Parça`, `Cria`                        | Seção social             |
+| Seguir (usuário)     | `Acompanhar`, `Tá na minha lista`                           | Botão de follow          |
+| Grupos               | `Tropa`, `Squad`, `Gangue`                                  | Navegação de grupos      |
+| Wishlist             | `Quero ir`, `Salvei`, `Na mira`                             | Ícone de bookmark        |
+| Listas               | `Minhas listas`, `Meus rolês`                               | Perfil                   |
+| Ranking              | `Top da galera`, `Quem tá no topo`                          | Aba de ranking           |
+| Notificações         | `Fofoca`, `O que tá rolando`                                | Badge, tela              |
+| Perfil               | `Meu perfil`, `Minha área`                                  | Bottom nav               |
+| Comentários          | `Resenha`, `Papo`                                           | Threads de review        |
+| Curtir               | `Amei`, `Fogo`, `Mandou bem`                                | Like button              |
+| Buscar               | `Achar rango`, `Onde vou?`                                  | Search bar               |
+| Filtros              | `Refinar o rolê`                                            | Bottom sheet de filtros  |
+| Configurações        | `Ajustes`, `Meu esquema`                                    | Settings                 |
+| Sair / Logout        | `Fui`, `Vazar`                                              | —                        |
+| Carregando           | `Preparando o rolê...`, `Só um seg...`                      | Loading states           |
+| Erro                 | `Deu ruim`, `Algo flopou`                                   | Error states             |
 
 **Regras de Copy:**
+
 - Use **emojis com moderação** — máximo 1 por elemento de UI.
 - Preferência por **caixa baixa** em botões secundários (`mandar a real` vs `Mandar a Real`).
 - Use **reticências** para criar suspense: `Lançando a braba...`
@@ -50,6 +52,7 @@ Todo texto da UI deve seguir este dicionário. Nunca use português formal corpo
 **Guru dos Restaurantes** é uma rede social de descoberta gastronômica onde o usuário acompanha reviews de amigos, criadores de conteúdo e grupos de interesse. A proposta é substituir o "Google Maps genérico" por recomendações de gente real — com tom de conversa, métricas customizáveis e descoberta social.
 
 **Diferenciais:**
+
 1. **Reviews segmentados por grupos** — a mesma visita pode ter avaliações diferentes dependendo do contexto (date vs. rolê com os cria).
 2. **Influenciadores integrados** — não é só rede de amigos; creators gastronômicos têm perfis verificados e conteúdo próprio.
 3. **Descoberta por vibe** — o app entende humor, ocasião e orçamento, não só nota geral.
@@ -60,6 +63,7 @@ Todo texto da UI deve seguir este dicionário. Nunca use português formal corpo
 ## 2. Arquitetura Técnica
 
 ### 2.1 Stack Android
+
 ```
 UI Layer:        Jetpack Compose + Material 3 + Coil (imagens)
 State Mgmt:      ViewModel + StateFlow + Compose State
@@ -75,6 +79,7 @@ Notifications:   Firebase Cloud Messaging (Mock inicial)
 ```
 
 ### 2.2 Clean Architecture Layers
+
 ```
 presentation/     → UI (Compose Screens, ViewModels, States)
   ├── components/ → Componentes reutilizáveis (ReviewCard, MetricSlider, etc.)
@@ -93,7 +98,9 @@ data/             → Implementações
 ```
 
 ### 2.3 Tema Visual (Design System)
+
 **Paleta sugerida (Dark-first, aesthetic):**
+
 - **Background:** `#0F0F0F` (quase preto) ou `#1A1A1A`
 - **Surface:** `#242424`
 - **Primary:** `#FF6B35` (laranja vibrante — energia, fome)
@@ -104,11 +111,13 @@ data/             → Implementações
 - **Text Secondary:** `#A0A0A0`
 
 **Tipografia:**
+
 - Títulos: `Display Large` — peso Bold, levemente compactado
 - Body: `Body Large` — peso Regular, line-height confortável
 - Labels/Slang: `Label Large` — peso Medium, caixa baixa permitida
 
 **Shapes:**
+
 - Cards: `16dp` rounded
 - Buttons: `24dp` pill-shaped (fully rounded)
 - Chips: `8dp` rounded
@@ -119,6 +128,7 @@ data/             → Implementações
 ## 3. Modelos de Dados (Kotlin Data Classes)
 
 ### 3.1 Usuário & Rede Social
+
 ```kotlin
 data class User(
     val id: String,
@@ -159,6 +169,7 @@ enum class SlangLevel { LOW, MEDIUM, HIGH }
 ```
 
 ### 3.2 Restaurante
+
 ```kotlin
 data class Restaurant(
     val id: String,
@@ -201,6 +212,7 @@ enum class PriceRange(val symbol: String, val label: String) {
 ```
 
 ### 3.3 Review (Avaliação)
+
 ```kotlin
 data class Review(
     val id: String,
@@ -230,6 +242,7 @@ sealed class TargetDestination {
 ```
 
 ### 3.4 Vibe Check (Status Rápido)
+
 > **Feature nova:** Update rápido sem review completa. Tipo Stories do Instagram mas para status do restaurante.
 
 ```kotlin
@@ -260,6 +273,7 @@ enum class VibeStatus(val emoji: String, val label: String) {
 ```
 
 ### 3.5 Grupos
+
 ```kotlin
 data class Group(
     val id: String,
@@ -293,6 +307,7 @@ data class GroupRanking(
 ```
 
 ### 3.6 Listas & Wishlist
+
 ```kotlin
 data class CustomList(
     val id: String,
@@ -323,6 +338,7 @@ data class ListItem(
 ```
 
 ### 3.7 Métricas Globais (Constants)
+
 ```kotlin
 enum class MetricId(val label: String, val emoji: String, val category: MetricCategory) {
     PRICE("Preço", "💰", MetricCategory.VALUE),
@@ -348,6 +364,7 @@ enum class MetricCategory { VALUE, EXPERIENCE, LOGISTICS, ATMOSPHERE, FOOD, DIET
 ```
 
 ### 3.8 Comentários & Interações
+
 ```kotlin
 data class Comment(
     val id: String,
@@ -389,6 +406,7 @@ enum class NotificationType {
 ```
 
 ### 3.9 Gamificação
+
 ```kotlin
 data class Badge(
     val id: String,
@@ -421,6 +439,7 @@ data class UserStats(
 ```
 
 ### 3.10 Enquetes (Feature de Grupo)
+
 ```kotlin
 data class Poll(
     val id: String,
@@ -451,16 +470,19 @@ data class PollOption(
 **Tela:** Full-screen bottom sheet (navegação por steps).
 
 **Step 1 — Onde foi?**
+
 - Search bar com autocomplete de restaurantes (mock SP / Ribeirão Preto).
 - Se não existir: botão `"Lugar novo"` → formulário de endereço completo (obrigatório: logradouro, número, bairro, cidade, estado).
 - Mapa miniatura para confirmar localização.
 
 **Step 2 — Quando e com quem?**
+
 - Date picker (default: hoje).
 - Toggle `"Fui sozinho"` / `"Fui com o bonde"`.
 - Se com bonde: multi-select de amigos (busca por @handle).
 
 **Step 3 — Pra onde vai esse review?**
+
 - Chips selecionáveis:
   - `📱 Meu Perfil` (sempre disponível, default on)
   - `👥 [Nome do Grupo]` (só grupos que o user participa)
@@ -469,12 +491,14 @@ data class PollOption(
 - **Warning visual:** se uma métrica obrigatória não for preenchida, o grupo fica com badge vermelho `"Faltou métrica"` e o review não será postado lá.
 
 **Step 4 — A nota e as métricas**
+
 - **Nota geral:** 1-5 estrelas customizadas (formato de 🌶️ pimentas ou ⭐ estrelas). Toggle `"Só colei lá"` zera a nota geral.
 - **Métricas:** Grid de chips expansível. Cada métrica tem slider 1-5 com emojis dinâmicos (1 = 😤, 5 = 🤩).
 - **Métricas obrigatórias:** Destacadas com borda colorida e label `"Obrigatório pra [Grupo X]"`.
 - **Métricas sugeridas:** Baseadas no tipo de restaurante (japonês sugere `"Sabor"`, `"Estética"`).
 
 **Step 5 — O papo (opcional)**
+
 - TextField multiline (max 500 chars) com placeholder rotativo:
   - `"Conta como foi o rolê..."`
   - `"O que pediu? Valeu a pena?"`
@@ -483,6 +507,7 @@ data class PollOption(
 - Toggle `"Mostrar quanto gastei"` + input de valor (social proof de preço real).
 
 **Step 6 — Preview & Publicar**
+
 - Card de preview mostrando como ficará no feed.
 - Botão principal: `"Lançar a braba 🚀"`.
 - Loading: `"Postando o papo..."`.
@@ -493,11 +518,13 @@ data class PollOption(
 ### 4.2 Feed / Home ("O que tá rolando")
 
 **Estrutura do Feed:**
+
 1. **Stories Rail (horizontal):** Vibe Checks ativos de amigos e influencers seguidos. Círculo com borda gradiente = tem vibe check ativo. Duração 4h.
 2. **Seção "Recomendado pra vc"** (1-2 cards): Algoritmo simples baseado em categorias que o user mais avalia.
 3. **Feed principal:** Reviews em ordem cronológica (default) ou por relevância.
 
 **Card de Review:**
+
 ```
 ┌─────────────────────────────────────┐
 │ [Avatar] @fulano · 2h · [🌶️🌶️🌶️🌶️]│
@@ -516,6 +543,7 @@ data class PollOption(
 ```
 
 **Interações no Card:**
+
 - **Like (❤️):** Double-tap na foto também dá like. Animação de coração.
 - **Comentar (💬):** Abre bottom sheet com thread. Suporta reply.
 - **Compartilhar (📤):** Gera imagem estilo Instagram Story com o review (shareable card).
@@ -526,6 +554,7 @@ data class PollOption(
 ### 4.3 Ranking ("Top da Galera")
 
 **Filtros (persistentes entre sessões):**
+
 - **Cidade:** Dropdown (São Paulo, Ribeirão Preto, + outras futuras).
 - **Alcance:** Segmented button:
   - `"Todo mundo"` (global)
@@ -534,11 +563,13 @@ data class PollOption(
 - **Métrica:** Bottom sheet com lista de métricas. `"Nota Geral"` é default.
 
 **Lista:**
+
 - Posição numerada (1, 2, 3 com medalhas 🥇🥈🥉).
 - Card horizontal: foto do restaurante + nome + nota + quantidade de reviews.
 - Badge `"Tá bombando 🔥"` se teve spike de reviews nas últimas 48h.
 
 **Botão Trending (canto superior direito, ícone 🔥):**
+
 - Alterna para modo `"Tá bombando"` — ranking por velocidade de reviews recentes + média móvel de 7 dias.
 - Badge de `"Hype"` nos que estão subindo rápido.
 
@@ -549,6 +580,7 @@ data class PollOption(
 > **Feature nova:** Tela dedicada de descoberta, acessível via ícone de busca no topo do Feed.
 
 **Modos de Busca:**
+
 1. **Texto:** Busca por nome, categoria, bairro.
 2. **Filtros Avançados (Bottom Sheet):**
    - Categorias: chips multi-select (Italiano, Japonês, Podrão, Vegano, etc.)
@@ -560,6 +592,7 @@ data class PollOption(
 3. **Mapa:** Mapa com pins dos restaurantes filtrados. Tap no pin abre card resumido.
 
 **Seção "Não sabe onde ir?" (Roulette):**
+
 - Botão grande `"🎲 Onde vou hoje?"`.
 - Abre modal com spinner/roleta animada.
 - Pré-filtros: `"Toquei o fodase"` (qualquer lugar) ou `"Só [categoria]"`.
@@ -570,6 +603,7 @@ data class PollOption(
 ### 4.5 Perfil ("Minha Área")
 
 **Header:**
+
 - Avatar (tap para editar), cover photo.
 - @handle, nome, bio.
 - Stats em row: `XX reviews · YY seguidores · ZZ seguindo`.
@@ -577,18 +611,21 @@ data class PollOption(
 - Badges: horizontal scroll dos badges conquistados (tap para ver detalhes).
 
 **Action Row (ícones acima do feed):**
+
 - `📝 Listas` → Navega para tela de listas
 - `👥 Grupos` → Navega para tela de grupos
 - `💾 Wishlist` → Navega para wishlist
 - `🏆 Conquistas` → **Novo:** Tela de badges e estatísticas
 
 **Tabs no Perfil:**
+
 - `Reviews` (default): feed pessoal de reviews.
 - `Fotos`: grid de todas as fotos postadas.
 - `Vibe Checks`: histórico de vibe checks.
 - `Curtidas`: reviews que o user curtiu.
 
 **Perfil de Outro Usuário:**
+
 - Se for influencer verificado: badge dourado com tier (`Cria Verificado`, `Chef de Conteúdo`, etc.).
 - Botão `"Acompanhar"` / `"Deixar de acompanhar"`.
 - Se acompanhar: reviews dele aparecem no seu feed.
@@ -598,11 +635,13 @@ data class PollOption(
 ### 4.6 Grupos ("Tropas")
 
 **Tela de Grupos (acessível pelo Perfil):**
+
 - Horizontal scroll de chips no topo: `"Todas"`, `"Administro"`, `"Membro"`.
 - Lista vertical de cards de grupo: cover, nome, quantidade de membros, métricas obrigatórias.
 - FAB `"Criar tropa"`.
 
 **Dentro de um Grupo:**
+
 - Header: cover, nome, descrição, contagem de membros.
 - Tabs:
   - `Feed`: Reviews postadas no grupo.
@@ -612,6 +651,7 @@ data class PollOption(
 - Admin actions (se for admin): editar métricas obrigatórias, moderar, convidar.
 
 **Criação de Grupo:**
+
 - Nome, descrição, cover (opcional).
 - Toggle: `"Tropa aberta"` (qualquer um entra) vs `"Tropa fechada"` (convite).
 - Seleção de métricas obrigatórias (da lista global).
@@ -621,11 +661,13 @@ data class PollOption(
 ### 4.7 Listas & Wishlist ("Meus Rolês")
 
 **Tela de Listas:**
+
 - Segmented control: `"Minhas"` / `"Colaboro"` / `"Seguindo"`.
 - Card de lista: cover/icon, nome, quantidade de lugares, privacidade (🔒 / 🌍).
 - FAB `"Nova lista"`.
 
 **Criação/Edição de Lista:**
+
 - Nome, descrição.
 - Ícone: emoji picker ou upload de imagem.
 - Cor de capa (color picker simples).
@@ -635,6 +677,7 @@ data class PollOption(
 - Colaboradores: busca de usuários para adicionar.
 
 **Dentro de uma Lista:**
+
 - Lista de restaurantes com nota, foto, nota pessoal.
 - Reorder por drag-and-drop.
 - Tap no restaurante → abre perfil do lugar.
@@ -647,6 +690,7 @@ data class PollOption(
 > **Feature nova e diferencial.** Acesso rápido via FAB secundário ou dentro do perfil do restaurante.
 
 **Fluxo:**
+
 1. User seleciona restaurante (ou está na página dele).
 2. Tap em `"Como tá?"`.
 3. Bottom sheet com grid de status (Vazio, Lotado, Fila, Música boa, etc.).
@@ -654,6 +698,7 @@ data class PollOption(
 5. Posta. Dura 4h no feed de stories do restaurante e dos amigos.
 
 **Visualização:**
+
 - Stories rail no topo do Feed (amigos).
 - Aba `"Agora"` no perfil do restaurante: lista de vibe checks ativos.
 - Mapa: pins pulsantes em restaurantes com vibe check recente.
@@ -663,6 +708,7 @@ data class PollOption(
 ### 4.9 Notificações ("Fofoca")
 
 **Tela de Notificações:**
+
 - Agrupadas por data: `"Hoje"`, `"Ontem"`, `"Esta semana"`.
 - Tipos visuais distintos por categoria:
   - Social (likes, follows): ícone de coração.
@@ -679,6 +725,7 @@ data class PollOption(
 > **Feature nova:** Geração de imagem para compartilhar no Instagram/WhatsApp.
 
 **Ao tapar em Compartilhar num review:**
+
 - Bottom sheet com opções:
   - `"Gerar card"` → Preview de imagem estilo Story (9:16).
   - `"Copiar link"`.
@@ -691,12 +738,14 @@ data class PollOption(
 ## 5. Navegação & UI Architecture
 
 ### 5.1 Bottom Navigation
+
 ```
 ┌─────┬─────┬─────────┬─────┬─────┐
 │ 🏠  │ 🏆  │   ➕    │ 🔔  │ 👤  │
 │Home │Rank │ Review  │Notif│Perfil│
 └─────┴─────┴─────────┴─────┴─────┘
 ```
+
 - **Home:** Feed principal.
 - **Ranking:** Leaderboards.
 - **Review (FAB central):** Ícone fino `+` ou `✎`, levemente elevado, com glow sutil na cor primary.
@@ -704,6 +753,7 @@ data class PollOption(
 - **Perfil:** Meu perfil.
 
 ### 5.2 Telas Principais (Routes)
+
 ```kotlin
 sealed class Route(val path: String) {
     object Home : Route("home")
@@ -723,14 +773,17 @@ sealed class Route(val path: String) {
 ```
 
 ### 5.3 Onboarding (Primeira Experiência)
+
 > **Novo:** Fluxo de onboarding essencial para reter Gen Z.
 
 **Step 1 — Bem-vindo:**
+
 - Animação de comida/estrelas.
 - Texto: `"Bem-vindo ao Rango Social 👋"`
 - Sub: `"Onde sua tropa descobre os melhores rolês."`
 
 **Step 2 — Escolha seu estilo:**
+
 - Cards selecionáveis (single choice):
   - `"🍔 Sou do bonde"` — social, curte ir com amigos.
   - `"📸 Influencer"` — quer postar reviews detalhados.
@@ -739,15 +792,18 @@ sealed class Route(val path: String) {
 - Isso influencia as métricas sugeridas e o feed inicial.
 
 **Step 3 — Escolha sua cidade:**
+
 - Dropdown: São Paulo, Ribeirão Preto.
 - Toggle `"Usar minha localização"`.
 
 **Step 4 — Siga gente:**
+
 - Lista de influencers mock (gastronômicos fictícios brasileiros).
 - Toggle follow rápido.
 - `"Pular"` disponível.
 
 **Step 5 — Pronto:**
+
 - `"Bora explorar! 🚀"`.
 
 ---
@@ -757,6 +813,7 @@ sealed class Route(val path: String) {
 **Cidades permitidas:** São Paulo (SP) e Ribeirão Preto (SP).
 
 **Gerar ~30 restaurantes mock por cidade** com variação de:
+
 - Categorias: Podrão, Japonês, Italiano, Pizzaria, Hamburgeria, Vegano, Churrascaria, Cafeteria, Bar, Doceria.
 - Bairros de SP: Pinheiros, Vila Madalena, Consolação, Centro, Liberdade, Itaim Bibi, Jardins, Moema.
 - Bairros de Ribeirão: Centro, Jardim Paulista, Vila Seixas, Ribeirânia.
@@ -765,6 +822,7 @@ sealed class Route(val path: String) {
 - Fotos: usar placeholders via `https://picsum.photos/` ou `https://placehold.co/` com seed por ID.
 
 **Influencers Mock:**
+
 - Criar 5-8 perfis de influencers fictícios brasileiros com:
   - Nome de handle estilo TikTok/Instagram.
   - Tier (Nano a Macro).
@@ -776,6 +834,7 @@ sealed class Route(val path: String) {
 ## 7. Lógicas de Negócio Importantes
 
 ### 7.1 Cálculo de Ranking
+
 ```
 score = (média_geral * 0.4) + (média_métrica_selecionada * 0.3) + (fator_reviews_recentes * 0.2) + (fator_engajamento * 0.1)
 
@@ -784,17 +843,20 @@ fator_engajamento = (likes + comentarios) / reviews_total (normalizado 0-1)
 ```
 
 ### 7.2 Trending / Hype
+
 ```
 hype_score = (reviews_ultimas_48h * 2) + (media_movel_7_dias - media_movel_14_dias)
 Se hype_score > threshold → badge "Tá bombando 🔥"
 ```
 
 ### 7.3 Streak de Reviews
+
 - Contar dias consecutivos com pelo menos 1 review.
 - Reset se passar 48h sem review.
 - Notificação push mock: `"Falta 1 review pra manter seu streak de 5 dias! 🔥"`.
 
 ### 7.4 Métricas Obrigatórias (Regras)
+
 - Ao selecionar grupos no review, fazer UNION das métricas obrigatórias.
 - Se o user preenche `"Atendimento"` e dois grupos exigem, mapear para ambos.
 - Se o user NÃO preenche uma métrica obrigatória:
@@ -803,6 +865,7 @@ Se hype_score > threshold → badge "Tá bombando 🔥"
   - Snackbar: `"Review postado, mas faltou métrica pra [Grupo X]"`.
 
 ### 7.5 Feed Algorithm (Simples)
+
 ```
 feed = (
   reviews_de_quem_eu_acompanho (peso 1.0)
@@ -819,6 +882,7 @@ feed = (
 > **Instrução para o AI Dev:** Execute por fases. Aguarde aprovação do usuário antes de avançar.
 
 ### Fase 1: Setup & Tema Visual
+
 - [ ] Criar projeto Android (Empty Activity, minSdk 26, targetSdk 35).
 - [ ] Configurar Gradle: Compose BOM, Navigation, Hilt, Room, Retrofit, Coil, Kotlinx Serialization.
 - [ ] Implementar tema customizado (Material 3) com as cores definidas.
@@ -830,6 +894,7 @@ feed = (
 - [ ] Implementar Bottom Navigation com FAB central.
 
 ### Fase 2: Modelos & Dados Mock
+
 - [ ] Implementar todas as data classes de domínio (User, Restaurant, Review, etc.).
 - [ ] Criar Room Entities e DAOs para cache local.
 - [ ] Criar FakeRepository com dados mock:
@@ -842,11 +907,13 @@ feed = (
 - [ ] Testar injeção de dependências e fluxo de dados.
 
 ### Fase 3: Onboarding & Autenticação (Mock)
+
 - [ ] Tela de onboarding (4 steps: boas-vindas, estilo, cidade, seguir).
 - [ ] Sistema de preferências locais (DataStore) para lembrar onboarding.
 - [ ] Mock de login (não precisa de backend real, apenas estado de "logado").
 
 ### Fase 4: Feed & Navegação Social
+
 - [ ] Implementar tela Home com Stories Rail (Vibe Checks mock).
 - [ ] Implementar ReviewCard com todas as interações (like, comentar, compartilhar, salvar).
 - [ ] Implementar tela de Search com filtros.
@@ -854,6 +921,7 @@ feed = (
 - [ ] Implementar sistema de comentários (thread simples).
 
 ### Fase 5: Fluxo de Review Completo
+
 - [ ] Tela de busca de restaurante (Step 1).
 - [ ] Formulário de novo restaurante (endereço completo obrigatório).
 - [ ] Seleção de destinos (perfil + grupos) com validação de métricas.
@@ -863,6 +931,7 @@ feed = (
 - [ ] Integrar com FakeRepository para persistir review.
 
 ### Fase 6: Ranking & Descoberta
+
 - [ ] Tela de Ranking com filtros (cidade, alcance, métrica).
 - [ ] Lógica de cálculo de ranking com dados mock.
 - [ ] Modo Trending/Hype com badge visual.
@@ -870,6 +939,7 @@ feed = (
 - [ ] Feature "Onde vou hoje?" (Roulette) com animação.
 
 ### Fase 7: Perfil, Grupos & Listas
+
 - [ ] Tela de Perfil (próprio e de outros usuários).
 - [ ] Sistema de follow/unfollow.
 - [ ] Sub-telas: Listas, Grupos, Wishlist.
@@ -878,6 +948,7 @@ feed = (
 - [ ] Criação de grupo com métricas obrigatórias.
 
 ### Fase 8: Gamificação & Polimento
+
 - [ ] Sistema de badges (visuais, não precisa de lógica complexa ainda).
 - [ ] Streak visual no perfil.
 - [ ] Tela de conquistas/estatísticas.
@@ -919,4 +990,4 @@ feed = (
 
 ---
 
-*Documento gerado para desenvolvimento assistido por IA. Mantenha o tom casual, o código limpo e o usuário feliz. Bora codar! 🚀*
+_Documento gerado para desenvolvimento assistido por IA. Mantenha o tom casual, o código limpo e o usuário feliz. Bora codar! 🚀_

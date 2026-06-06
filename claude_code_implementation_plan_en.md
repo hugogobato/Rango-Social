@@ -7,9 +7,11 @@ This document is a comprehensive, step-by-step action plan designed for **Claude
 ---
 
 ## 🚀 PHASE 1: Project Setup & Visual Theme
+
 **Objective:** Establish the foundational architecture, dependencies, and Design System.
 
 **Files & Tasks to Create:**
+
 1. **Dependencies (`app/build.gradle.kts`):** Add Compose BOM, Navigation Compose, Hilt, Room, Retrofit, OkHttp, Coil, and `kotlinx.serialization`.
 2. **DI Setup (`GuruApplication.kt`):** Create the custom Application class and annotate with `@HiltAndroidApp`.
 3. **Theme & Design System (`core/presentation/theme/`):**
@@ -27,9 +29,11 @@ This document is a comprehensive, step-by-step action plan designed for **Claude
 ---
 
 ## 📦 PHASE 2: Domain Models & Mock Data
+
 **Objective:** Map out the domain entities and create a fake repository layer to supply mock data to the UI.
 
 **Files & Tasks to Create:**
+
 1. **Domain Models (`domain/model/`):**
    - `User.kt`, `Restaurant.kt`, `Review.kt`, `VibeCheck.kt`, `Group.kt`, `CustomList.kt`.
    - `Enums.kt`: Define `MetricId`, `InfluencerTier`, `PriceRange`, `VibeStatus`.
@@ -52,9 +56,11 @@ This document is a comprehensive, step-by-step action plan designed for **Claude
 ---
 
 ## 🙋‍♂️ PHASE 3: Onboarding & "Authentication"
+
 **Objective:** Capture user preferences and mock a logged-in state.
 
 **Files & Tasks to Create:**
+
 1. **Local Storage (`data/local/datastore/`):**
    - `UserPreferencesDataStore.kt`: Store boolean `hasCompletedOnboarding` and a mock `currentUserId`.
 2. **Onboarding UI (`presentation/onboarding/`):**
@@ -70,9 +76,11 @@ This document is a comprehensive, step-by-step action plan designed for **Claude
 ---
 
 ## 📱 PHASE 4: Feed (Home) & Social Interactions
+
 **Objective:** Build the main timeline, displaying reviews, vibe checks, and enabling social actions.
 
 **Files & Tasks to Create:**
+
 1. **Home UI (`presentation/home/`):**
    - `HomeViewModel.kt`: Fetches the feed via `GetHomeFeedUseCase`.
    - `HomeScreen.kt`: Displays the feed using a `LazyColumn`.
@@ -89,9 +97,11 @@ This document is a comprehensive, step-by-step action plan designed for **Claude
 ---
 
 ## 🌶️ PHASE 5: The Review Flow ("Mandar a Real")
+
 **Objective:** Build the multi-step bottom sheet/dialog for posting a new review.
 
 **Files & Tasks to Create:**
+
 1. **Review Flow Navigation (`presentation/review/`):**
    - `ReviewFlowViewModel.kt`: Holds the entire draft state of the review across all steps.
 2. **Step Screens (`presentation/review/steps/`):**
@@ -107,9 +117,11 @@ This document is a comprehensive, step-by-step action plan designed for **Claude
 ---
 
 ## 🏆 PHASE 6: Ranking & Discovery Maps
+
 **Objective:** Implement the gamified leaderboards and map-based exploration.
 
 **Files & Tasks to Create:**
+
 1. **Ranking UI (`presentation/ranking/`):**
    - `RankingViewModel.kt` & `RankingScreen.kt`.
    - `components/RankingFiltersBar.kt`: Persisted filters (City, Reach, Metric).
@@ -123,9 +135,11 @@ This document is a comprehensive, step-by-step action plan designed for **Claude
 ---
 
 ## 👤 PHASE 7: Profile, Groups ("Tropas") & Lists
+
 **Objective:** Build user identity, communities, and saved lists.
 
 **Files & Tasks to Create:**
+
 1. **Profile UI (`presentation/profile/`):**
    - `ProfileViewModel.kt` & `ProfileScreen.kt`.
    - `components/ProfileHeader.kt`: Avatar, stats, bio.
@@ -143,9 +157,11 @@ This document is a comprehensive, step-by-step action plan designed for **Claude
 ---
 
 ## ✨ PHASE 8: Gamification & Final Polish
+
 **Objective:** Implement micro-interactions, shareable content, and ensure production-like quality.
 
 **Files & Tasks to Create:**
+
 1. **Vibe Check Quick Post (`presentation/vibecheck/`):**
    - `CreateVibeCheckBottomSheet.kt`: Accessible from the home FAB or restaurant profile. Grid of 10 statuses (e.g., Empty, Busy, Good Music).
 2. **Shareable Cards (`presentation/share/`):**
@@ -160,4 +176,4 @@ This document is a comprehensive, step-by-step action plan designed for **Claude
 
 ---
 
-**Note to Claude Code:** Once you have read and understood this plan, explicitly state: *"I have loaded the detailed English implementation plan. Are we ready to begin PHASE 1 for Guru dos Restaurantes?"*
+**Note to Claude Code:** Once you have read and understood this plan, explicitly state: _"I have loaded the detailed English implementation plan. Are we ready to begin PHASE 1 for Guru dos Restaurantes?"_

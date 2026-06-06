@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #0f0f0f;
+    --foreground: #ffffff;
+    --surface: #242424;
+
+    --card: #242424;
+    --card-foreground: #ffffff;
+
+    --popover: #242424;
+    --popover-foreground: #ffffff;
+
+    --primary: #ff6b35;
+    --primary-foreground: #ffffff;
+
+    --secondary: #7b61ff;
+    --secondary-foreground: #ffffff;
+
+    --muted: #2a2a2a;
+    --muted-foreground: #a0a0a0;
+
+    --accent: #00d9c0;
+    --accent-foreground: #0f0f0f;
+
+    --destructive: #ff453a;
+    --destructive-foreground: #ffffff;
+
+    --border: #333333;
+    --input: #2a2a2a;
+    --ring: #ff6b35;
+
+    --radius: 16px;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family:
+      'Inter',
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      'Open Sans',
+      'Helvetica Neue',
+      sans-serif;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
