@@ -6,6 +6,8 @@ import { router } from './app/router'
 import { Capacitor } from '@capacitor/core'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
+import 'leaflet/dist/leaflet.css'
+
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

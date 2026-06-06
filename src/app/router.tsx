@@ -15,9 +15,12 @@ import { DuelLeaderboardScreen } from '../features/duel/DuelLeaderboardScreen'
 import { IllnessReportScreen } from '../features/illness/IllnessReportScreen'
 import { RestaurantDetailScreen } from '../features/restaurant/RestaurantDetailScreen'
 import { GroupDetailScreen } from '../features/groups/GroupDetailScreen'
+import { GroupsListScreen } from '../features/groups/GroupsListScreen'
 import { ListDetailScreen } from '../features/lists/ListDetailScreen'
+import { ListsListScreen } from '../features/lists/ListsListScreen'
 import { SearchScreen } from '../features/search/SearchScreen'
 import { RouletteScreen } from '../features/roulette/RouletteScreen'
+
 
 export const router = createBrowserRouter([
   {
@@ -85,8 +88,16 @@ export const router = createBrowserRouter([
         element: <IllnessReportScreen />,
       },
       {
+        path: 'groups',
+        element: <GroupsListScreen />,
+      },
+      {
         path: 'group/:groupId',
         element: <GroupDetailScreen />,
+      },
+      {
+        path: 'lists',
+        element: <ListsListScreen />,
       },
       {
         path: 'list/:listId',
