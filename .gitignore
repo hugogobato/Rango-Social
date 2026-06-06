@@ -1,72 +1,49 @@
-# Android / Gradle build artifacts
-.gradle/
+# Dependency directories
+node_modules/
+
+# Build outputs (Vite/PWA)
+dist/
+dist-ssr/
+.svelte-kit/
+.next/
+.nuxt/
+out/
 build/
-*/build/
-*.apk
-*.aar
-*.ap_
-*.dex
 
-# IDE settings - Android Studio / IntelliJ / VS Code
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# IDEs and editors
 .idea/
-*.iml
-.navigation/
-captures/
-.settings/
-.project
-.classpath
 .vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.patch
 
-# Local configuration (Private/Sensitive)
-# These files contain local paths or keys that shouldn't be shared
-local.properties
-google-services.json
-*.jks
-*.keystore
-*.p12
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# OS generated files
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# OS files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# NTFS ADS (Alternate Data Streams) / Windows metadata
-# This targets files like .gitignore:Zone.Identifier
+# Alternate Data Streams (Windows)
 *:Zone.Identifier
 *.Identifier
-
-# Hilt / Dagger generated sources
-# This ensures the Hilt_MainActivity and other generated boilerplate stay out of Git
-**/hilt_aggregated_deps/
-**/dagger.hilt.android.internal.lifecycle.DefaultViewModelFactories
-**/dagger.hilt.internal.aggregatedroot.codegen/
-**/Hilt_*.java
-**/Hilt_*.kt
-
-# Room / SQL Schema exports
-schemas/
-
-# Log files
-*.log
-
-# Android Studio LINT
-lint/
-
-# Proguard / R8 mapping files
-proguard/
-
-# Temporary files
-.temp/
-temp/
-*.tmp
-*.bak
-
-# Merged resources and intermediates
-# (Though build/ covers these, adding specific patterns for clarity)
-**/intermediates/
-**/generated/
-**/merged/
-**/bin/
-**/gen/
-
-.env
