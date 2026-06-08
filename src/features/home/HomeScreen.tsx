@@ -3,14 +3,25 @@ import { Sparkles, Trophy, Plus, MapPin } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { useRestaurants, useReviews, useStories } from '../../lib/query/hooks'
+import {
+  useRestaurants,
+  useReviews,
+  useStories,
+  useSessionUser,
+} from '../../lib/query/hooks'
 import { ReviewCard } from '../../components/shared/ReviewCard'
+import { LazyImage } from '../../components/shared/LazyImage'
+import {
+  ReviewCardSkeleton,
+  RestaurantCardSkeleton,
+} from '../../components/shared/Skeletons'
 import { copy } from '../../copy/pt-BR'
 
 export function HomeScreen() {
   const { data: restaurants, isLoading: isRestaurantsLoading } = useRestaurants()
   const { data: reviews, isLoading: isReviewsLoading } = useReviews()
   const { data: stories } = useStories()
+  const { data: sessionUser } = useSessionUser()
 
   return (
     <div className="space-y-6">
@@ -26,20 +37,33 @@ export function HomeScreen() {
             <span className="text-[10px] text-[#A0A0A0] font-medium">Postar</span>
           </Link>
 
-          {/* Stories list */}
+          {/* Stories list (gradient ring = unseen, muted ring = already seen) */}
           {stories && stories.length > 0 ? (
-            stories.map((story) => (
+            stories.map((story) => {
+              const seen = !!sessionUser && story.viewers.includes(sessionUser.id)
+              return (
               <Link key={story.id} to="/stories" className="flex flex-col items-center flex-shrink-0 gap-1.5">
-                <div className="relative p-0.5 rounded-full bg-gradient-to-tr from-primary to-[#FF8C61] shadow-[0_0_10px_rgba(255,107,53,0.2)]">
+                <div
+                  className={`relative rounded-full p-0.5 ${
+                    seen
+                      ? 'bg-[#3A3A3A]'
+                      : 'bg-gradient-to-tr from-primary to-[#FF8C61] shadow-[0_0_10px_rgba(255,107,53,0.2)]'
+                  }`}
+                >
                   <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-[#0F0F0F] bg-[#242424]">
-                    <img src={story.photoUrl} alt="Story" className="h-full w-full object-cover" />
+                    <LazyImage
+                      src={story.photoUrl}
+                      alt={`Story de ${story.userId.replace('u_', '')}`}
+                      fallback="📸"
+                    />
                   </div>
                 </div>
                 <span className="text-[10px] text-white font-medium max-w-[60px] truncate">
                   {story.userId.replace('u_', '')}
                 </span>
               </Link>
-            ))
+              )
+            })
           ) : (
             <div className="flex items-center text-xs text-[#666] italic pl-2">Nenhum story ativo</div>
           )}
@@ -97,18 +121,18 @@ export function HomeScreen() {
         </div>
 
         {isRestaurantsLoading ? (
-          <div className="py-6 text-center text-xs text-[#808080]">Carregando rango...</div>
+          <div className="grid gap-4">
+            <RestaurantCardSkeleton />
+            <RestaurantCardSkeleton />
+            <RestaurantCardSkeleton />
+          </div>
         ) : (
           <div className="grid gap-4">
             {restaurants?.slice(0, 3).map((restaurant) => (
               <Card key={restaurant.id} className="border-[#2D2D2D] bg-[#1A1A1A] overflow-hidden hover:border-[#444] transition-all">
                 <Link to={`/restaurant/${restaurant.id}`}>
                   <div className="h-32 bg-[#2D2D2D] relative overflow-hidden">
-                    {restaurant.photos && restaurant.photos[0] ? (
-                      <img src={restaurant.photos[0]} alt={restaurant.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-[#808080]">Sem foto</div>
-                    )}
+                    <LazyImage src={restaurant.photos?.[0]} alt={restaurant.name} />
                     <div className="absolute top-2 right-2">
                       <Badge className="bg-[#0F0F0F]/80 text-white font-bold border-none px-2 py-0.5">
                         {restaurant.priceRange}
@@ -148,7 +172,10 @@ export function HomeScreen() {
       <section className="space-y-4">
         <h3 className="text-sm font-extrabold text-white">Últimas do Bonde</h3>
         {isReviewsLoading ? (
-          <div className="py-6 text-center text-xs text-[#808080]">Carregando fofocas...</div>
+          <div className="space-y-4">
+            <ReviewCardSkeleton />
+            <ReviewCardSkeleton />
+          </div>
         ) : reviews && reviews.length > 0 ? (
           <div className="space-y-4">
             {reviews.slice(0, 3).map((review) => (

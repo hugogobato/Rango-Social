@@ -27,39 +27,41 @@ import {
   MockDuelRepository,
   MockAiRepository,
 } from './mock/repositories'
+import { isSupabaseConfigured } from './supabase/client'
+import { supabaseDb } from './supabase/repositories'
 
-// We will default to Mock and wire Supabase dynamically in Phase 12
-// const _isSupabase =
-//   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DATA_SOURCE === 'supabase') ||
-//   (typeof process !== 'undefined' && process.env?.VITE_DATA_SOURCE === 'supabase')
+// Route to Supabase only when explicitly opted-in AND the client env vars exist
+// (URL + anon key). Anything else — including tests — falls back to the in-memory
+// mock so the app and the test suite never require a live backend.
+const useSupabase =
+  import.meta.env.VITE_DATA_SOURCE === 'supabase' && isSupabaseConfigured
 
-export const userRepository: UserRepository = new MockUserRepository()
-export const restaurantRepository: RestaurantRepository =
-  new MockRestaurantRepository()
-export const reviewRepository: ReviewRepository = new MockReviewRepository()
-export const vibeCheckRepository: VibeCheckRepository =
-  new MockVibeCheckRepository()
-export const groupRepository: GroupRepository = new MockGroupRepository()
-export const listRepository: ListRepository = new MockListRepository()
-export const notificationRepository: NotificationRepository =
-  new MockNotificationRepository()
-export const sessionRepository: SessionRepository = new MockSessionRepository()
-export const storyRepository: StoryRepository = new MockStoryRepository()
-export const illnessRepository: IllnessRepository = new MockIllnessRepository()
-export const duelRepository: DuelRepository = new MockDuelRepository()
-export const aiRepository: AiRepository = new MockAiRepository()
-
-export const db = {
-  users: userRepository,
-  restaurants: restaurantRepository,
-  reviews: reviewRepository,
-  vibeChecks: vibeCheckRepository,
-  groups: groupRepository,
-  lists: listRepository,
-  notifications: notificationRepository,
-  session: sessionRepository,
-  stories: storyRepository,
-  illness: illnessRepository,
-  duels: duelRepository,
-  ai: aiRepository,
+const mockDb = {
+  users: new MockUserRepository(),
+  restaurants: new MockRestaurantRepository(),
+  reviews: new MockReviewRepository(),
+  vibeChecks: new MockVibeCheckRepository(),
+  groups: new MockGroupRepository(),
+  lists: new MockListRepository(),
+  notifications: new MockNotificationRepository(),
+  session: new MockSessionRepository(),
+  stories: new MockStoryRepository(),
+  illness: new MockIllnessRepository(),
+  duels: new MockDuelRepository(),
+  ai: new MockAiRepository(),
 }
+
+export const db = useSupabase ? supabaseDb : mockDb
+
+export const userRepository: UserRepository = db.users
+export const restaurantRepository: RestaurantRepository = db.restaurants
+export const reviewRepository: ReviewRepository = db.reviews
+export const vibeCheckRepository: VibeCheckRepository = db.vibeChecks
+export const groupRepository: GroupRepository = db.groups
+export const listRepository: ListRepository = db.lists
+export const notificationRepository: NotificationRepository = db.notifications
+export const sessionRepository: SessionRepository = db.session
+export const storyRepository: StoryRepository = db.stories
+export const illnessRepository: IllnessRepository = db.illness
+export const duelRepository: DuelRepository = db.duels
+export const aiRepository: AiRepository = db.ai

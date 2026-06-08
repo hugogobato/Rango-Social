@@ -28,8 +28,10 @@ import {
   type Comment,
   type Story,
   type IllnessReport,
+  type PublicIllnessReport,
   type IllnessSymptom,
-  type RestaurantCategory,
+  type MetricId,
+  RestaurantCategory,
   type RestaurantDuel,
   type CuisineElo,
   type AiUserProfile,
@@ -47,6 +49,7 @@ import {
   notifications as initialNotifications,
 } from './fixtures'
 import { calculateElo } from '../../domain/logic/elo'
+import { summarizeIllness } from '../../domain/logic/illness'
 
 // Mutable In-Memory Database States
 let usersState = [...allUsers]
@@ -59,18 +62,124 @@ let vibeChecksState = [...initialVibeChecks]
 let notificationsState = [...initialNotifications]
 
 // New Features In-Memory States
+const hoursFromNow = (h: number) => new Date(Date.now() + h * 60 * 60 * 1000).toISOString()
+const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString()
+const daysAgoIso = (d: number) => new Date(Date.now() - d * 24 * 60 * 60 * 1000).toISOString()
+
 let storiesState: Story[] = [
   {
     id: 'story_1',
     userId: 'u_dudacomida',
+    restaurantId: 'r_sp_0',
     photoUrl: 'https://picsum.photos/seed/story1/1080/1920',
     caption: 'Melhor burger da cidade! 🍔🔥',
-    viewers: [],
-    expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(), // expires in 12h
-    createdAt: new Date().toISOString(),
+    viewers: [], // unseen by current user → gradient ring on the rail
+    expiresAt: hoursFromNow(12), // expires in 12h
+    createdAt: hoursAgo(2),
+  },
+  {
+    id: 'story_2',
+    userId: 'u_chefnando',
+    restaurantId: 'r_sp_1',
+    photoUrl: 'https://picsum.photos/seed/story2/1080/1920',
+    caption: 'Resenha de hoje 🍝',
+    viewers: ['u_me', 'u_pizzaqueen'], // already seen by current user → muted ring
+    expiresAt: hoursFromNow(20),
+    createdAt: hoursAgo(5),
+  },
+  {
+    id: 'story_3',
+    userId: 'u_me',
+    restaurantId: 'r_rp_0',
+    photoUrl: 'https://picsum.photos/seed/story3/1080/1920',
+    caption: 'Colei nesse pico, recomendo 👌',
+    viewers: ['u_dudacomida', 'u_chefnando', 'u_pizzaqueen'], // my story → viewer list
+    expiresAt: hoursFromNow(22),
+    createdAt: hoursAgo(1),
   },
 ]
-let illnessReportsState: IllnessReport[] = []
+
+// Seeded illness reports: r_sp_2 is at/above threshold (warning), r_sp_3 is below it.
+let illnessReportsState: IllnessReport[] = [
+  {
+    id: 'ill_seed_1',
+    restaurantId: 'r_sp_2',
+    reporterUserId: 'u_dudacomida',
+    symptom: 'INTOXICACAO' as IllnessSymptom,
+    mealDate: daysAgoIso(5).split('T')[0],
+    createdAt: daysAgoIso(5),
+  },
+  {
+    id: 'ill_seed_2',
+    restaurantId: 'r_sp_2',
+    reporterUserId: 'u_chefnando',
+    symptom: 'DIARREIA' as IllnessSymptom,
+    mealDate: daysAgoIso(12).split('T')[0],
+    createdAt: daysAgoIso(12),
+  },
+  {
+    id: 'ill_seed_3',
+    restaurantId: 'r_sp_2',
+    reporterUserId: 'u_pizzaqueen',
+    symptom: 'VOMITO' as IllnessSymptom,
+    mealDate: daysAgoIso(40).split('T')[0],
+    createdAt: daysAgoIso(40),
+  },
+  {
+    id: 'ill_seed_4',
+    restaurantId: 'r_sp_3',
+    reporterUserId: 'u_dudacomida',
+    symptom: 'MAL_ESTAR' as IllnessSymptom,
+    mealDate: daysAgoIso(8).split('T')[0],
+    createdAt: daysAgoIso(8),
+  },
+]
+
+// Reconcile each restaurant's illness aggregate with the seeded reports so the
+// warning banner reflects real counts from the start.
+restaurantsState = restaurantsState.map((r) => {
+  const reports = illnessReportsState.filter((i) => i.restaurantId === r.id)
+  if (reports.length === 0) return r
+  const { count90d, warning } = summarizeIllness(reports)
+  return { ...r, illnessReports90d: count90d, illnessWarning: warning }
+})
+
+// Seed a duel-eligible matchup for the current user: two recent same-cuisine reviews
+// sharing several metrics, so the duel trigger has data on first run.
+{
+  const me = currentUserState?.id || 'u_me'
+  const sharedMetrics = {} as Record<MetricId, number>
+  ;(['TASTE', 'SERVICE', 'COST_BENEFIT', 'VIBE'] as MetricId[]).forEach((m) => {
+    sharedMetrics[m] = 4
+  })
+  for (const cat of Object.values(RestaurantCategory)) {
+    const pair = restaurantsState
+      .filter((r) => r.categories.includes(cat))
+      .slice(0, 2)
+    if (pair.length < 2) continue
+    const seededDuelReviews: Review[] = pair.map((r, idx) => ({
+      id: `rev_duel_${idx}`,
+      userId: me,
+      restaurantId: r.id,
+      restaurant: r,
+      overallScore: idx === 0 ? 5 : 4,
+      metrics: sharedMetrics,
+      comment: 'Colei aqui faz pouco tempo, rango de respeito.',
+      photos: [],
+      targetDestinations: [{ type: 'profile', id: me }],
+      receiptPhoto: null,
+      totalSpent: undefined,
+      visitDate: daysAgoIso(idx === 0 ? 2 : 9).split('T')[0],
+      companions: null,
+      likes: 0,
+      comments: [],
+      isLikedByMe: false,
+      createdAt: hoursAgo(idx === 0 ? 3 : 60),
+    }))
+    reviewsState = [...seededDuelReviews, ...reviewsState]
+    break
+  }
+}
 let restaurantDuelsState: RestaurantDuel[] = []
 let cuisineElosState: CuisineElo[] = []
 let aiUserProfilesState: AiUserProfile[] = []
@@ -457,8 +566,20 @@ export class MockStoryRepository implements StoryRepository {
 export class MockIllnessRepository implements IllnessRepository {
   async getIllnessReportsByRestaurant(
     restaurantId: string
-  ): Promise<IllnessReport[]> {
-    return illnessReportsState.filter((i) => i.restaurantId === restaurantId)
+  ): Promise<PublicIllnessReport[]> {
+    // Strip reporterUserId — the reporter's identity is never returned to clients.
+    return illnessReportsState
+      .filter((i) => i.restaurantId === restaurantId)
+      .map(
+        (i): PublicIllnessReport => ({
+          id: i.id,
+          restaurantId: i.restaurantId,
+          symptom: i.symptom,
+          note: i.note,
+          mealDate: i.mealDate,
+          createdAt: i.createdAt,
+        })
+      )
   }
   async postIllnessReport(
     restaurantId: string,
@@ -466,10 +587,18 @@ export class MockIllnessRepository implements IllnessRepository {
     note?: string,
     mealDate?: string
   ): Promise<IllnessReport> {
+    const userId = currentUserState?.id || 'u_me'
+
+    // Enforce one report per user per restaurant per 30 days (abuse guard).
+    const allowed = await this.checkUserReportLimit(restaurantId, userId)
+    if (!allowed) {
+      throw new Error('ALREADY_REPORTED')
+    }
+
     const newReport: IllnessReport = {
       id: `ill_${Math.random().toString(36).substring(2, 9)}`,
       restaurantId,
-      reporterUserId: currentUserState?.id || 'u_me',
+      reporterUserId: userId,
       symptom,
       note,
       mealDate: mealDate || new Date().toISOString().split('T')[0],
@@ -477,25 +606,16 @@ export class MockIllnessRepository implements IllnessRepository {
     }
     illnessReportsState = [...illnessReportsState, newReport]
 
-    // Recompute illnessWarning on restaurant
-    const ninetyDaysAgo = new Date(
-      Date.now() - 90 * 24 * 60 * 60 * 1000
-    ).toISOString()
-    const recentReports = illnessReportsState.filter(
-      (i) => i.restaurantId === restaurantId && i.createdAt >= ninetyDaysAgo
+    // Recompute the public illness aggregate (threshold logic lives in domain/logic).
+    const restaurantReports = illnessReportsState.filter(
+      (i) => i.restaurantId === restaurantId
     )
-
-    restaurantsState = restaurantsState.map((r) => {
-      if (r.id === restaurantId) {
-        const count = recentReports.length
-        return {
-          ...r,
-          illnessReports90d: count,
-          illnessWarning: count >= 3, // Warning threshold is 3 reports
-        }
-      }
-      return r
-    })
+    const { count90d, warning } = summarizeIllness(restaurantReports)
+    restaurantsState = restaurantsState.map((r) =>
+      r.id === restaurantId
+        ? { ...r, illnessReports90d: count90d, illnessWarning: warning }
+        : r
+    )
 
     return newReport
   }

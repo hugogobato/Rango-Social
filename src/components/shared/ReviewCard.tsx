@@ -9,6 +9,8 @@ import { toast } from '../ui/Toast'
 import { useSessionUser, useToggleLike, useAddComment } from '../../lib/query/hooks'
 import { type Review } from '../../domain/models'
 import { copy } from '../../copy/pt-BR'
+import { shareContent } from '../../lib/platform'
+import { LazyImage } from './LazyImage'
 
 interface ReviewCardProps {
   review: Review
@@ -55,21 +57,21 @@ export function ReviewCard({ review }: ReviewCardProps) {
       })
       setNewCommentText('')
       toast('Comentário enviado!', 'success')
-    } catch (err) {
+    } catch {
       toast('Falha ao comentar', 'error')
     }
   }
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `Review de ${review.restaurant?.name}`,
-        text: review.comment || 'Olha esse review no Rango Social!',
-        url: window.location.href,
-      }).catch(() => {})
-    } else {
-      navigator.clipboard.writeText(window.location.href)
+  const handleShare = async () => {
+    const result = await shareContent({
+      title: `Review de ${review.restaurant?.name ?? 'um pico'}`,
+      text: review.comment || 'Olha esse review no Rango Social!',
+      url: window.location.href,
+    })
+    if (result === 'copied') {
       toast('Link copiado pro clipboard, cria! 📋', 'success')
+    } else if (result === 'failed') {
+      toast('Não rolou compartilhar', 'error')
     }
   }
 
@@ -123,10 +125,10 @@ export function ReviewCard({ review }: ReviewCardProps) {
             onClick={handlePhotoClick}
             className="aspect-video bg-[#242424] overflow-hidden relative cursor-pointer group"
           >
-            <img
+            <LazyImage
               src={review.photos[0]}
-              alt="Rango"
-              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+              alt={`Foto de ${review.restaurant?.name ?? 'um rango'}`}
+              className="group-hover:scale-[1.02] transition-transform duration-300"
             />
             {perPersonCost && (
               <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-primary border border-primary/20 shadow-md">
@@ -185,12 +187,16 @@ export function ReviewCard({ review }: ReviewCardProps) {
 
             <button
               onClick={handleShare}
+              aria-label="Compartilhar review"
               className="flex items-center gap-1.5 hover:text-white transition-colors text-[11px] font-semibold"
             >
               <Share2 size={14} />
             </button>
 
-            <button className="ml-auto hover:text-white transition-colors">
+            <button
+              aria-label="Salvar review"
+              className="ml-auto hover:text-white transition-colors"
+            >
               <Bookmark size={14} />
             </button>
           </div>

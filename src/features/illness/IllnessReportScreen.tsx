@@ -1,22 +1,33 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ShieldCheck, HeartCrack } from 'lucide-react'
+import { ShieldCheck, HeartCrack, CheckCircle2 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { toast } from '../../components/ui/Toast'
-import { usePostIllnessReport } from '../../lib/query/hooks'
+import {
+  usePostIllnessReport,
+  useIllnessReportLimit,
+  useSessionUser,
+} from '../../lib/query/hooks'
 import { IllnessSymptom } from '../../domain/models'
 import { copy } from '../../copy/pt-BR'
 
 export function IllnessReportScreen() {
   const { restaurantId } = useParams<{ restaurantId: string }>()
   const navigate = useNavigate()
-  
+
+  const { data: sessionUser } = useSessionUser()
   const postIllnessReportMutation = usePostIllnessReport()
+  const { data: canReport, isLoading: isCheckingLimit } = useIllnessReportLimit(
+    restaurantId || '',
+    sessionUser?.id || ''
+  )
 
   const [symptom, setSymptom] = useState<IllnessSymptom>(IllnessSymptom.MAL_ESTAR)
   const [mealDate, setMealDate] = useState(new Date().toISOString().split('T')[0])
   const [note, setNote] = useState('')
+
+  const alreadyReported = canReport === false
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +44,11 @@ export function IllnessReportScreen() {
       toast('Relato enviado anonimamente. Cuidado com o estômago! 🤢', 'success')
       navigate(`/restaurant/${restaurantId}`)
     } catch (err) {
-      toast('Falha ao enviar relato', 'error')
+      if (err instanceof Error && err.message === 'ALREADY_REPORTED') {
+        toast(copy.illness.alreadyReported, 'info')
+      } else {
+        toast('Falha ao enviar relato', 'error')
+      }
     }
   }
 
@@ -49,6 +64,21 @@ export function IllnessReportScreen() {
         </p>
       </div>
 
+      {alreadyReported ? (
+        <Card className="border-primary/20 bg-primary/5 p-5">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <CheckCircle2 size={32} className="text-primary" />
+            <p className="text-sm font-bold text-white">{copy.illness.alreadyReported}</p>
+            <Button
+              onClick={() => navigate(`/restaurant/${restaurantId}`)}
+              variant="outline"
+              className="rounded-full border-[#2D2D2D] text-xs"
+            >
+              Voltar pro pico
+            </Button>
+          </div>
+        </Card>
+      ) : (
       <Card className="border-[#2D2D2D] bg-[#1A1A1A] p-4">
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Safety Notice */}
@@ -103,11 +133,16 @@ export function IllnessReportScreen() {
             />
           </div>
 
-          <Button type="submit" className="w-full rounded-full bg-[#FF453A] hover:bg-red-600 text-white font-bold py-6 text-sm">
-            {copy.illness.submit}
+          <Button
+            type="submit"
+            disabled={postIllnessReportMutation.isPending || isCheckingLimit}
+            className="w-full rounded-full bg-[#FF453A] hover:bg-red-600 text-white font-bold py-6 text-sm"
+          >
+            {postIllnessReportMutation.isPending ? 'Enviando…' : copy.illness.submit}
           </Button>
         </form>
       </Card>
+      )}
     </div>
   )
 }

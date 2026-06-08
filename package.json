@@ -10,11 +10,13 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
+    "seed": "tsx scripts/seed-supabase.ts",
     "format": "prettier --write ."
   },
   "dependencies": {
     "@capacitor/core": "^8.4.0",
     "@hookform/resolvers": "^5.4.0",
+    "@supabase/supabase-js": "^2.107.0",
     "@tanstack/react-query": "^5.101.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
@@ -54,6 +56,7 @@
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^3.4.19",
+    "tsx": "^4.22.4",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12",

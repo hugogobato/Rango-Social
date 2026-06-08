@@ -168,6 +168,9 @@ export const copy = {
     composerTitle: 'Lançar Story 📸',
     viewerTitle: 'Visualizadores',
     expireNotice: 'Some em 24h',
+    tagRestaurant: 'Marcar um pico (opcional)',
+    noViewers: 'Ninguém viu ainda',
+    viewsLabel: 'visualizações',
   },
   illness: {
     button: 'Passei mal aqui 🤢',
@@ -177,6 +180,8 @@ export const copy = {
     notePlaceholder: 'Algum detalhe extra? (opcional)',
     submit: 'Relatar anonimamente',
     warning: '⚠️ %d relatos de mal-estar nos últimos 90 dias',
+    alreadyReported:
+      'Você já relatou esse pico nos últimos 30 dias. Valeu por avisar! 🙏',
   },
   duel: {
     title: 'Bora um duelo? 🥊',
@@ -184,9 +189,17 @@ export const copy = {
     questionSabor: 'Quem tem o melhor sabor?',
     questionAtendimento: 'Quem atende melhor?',
     questionCustoBeneficio: 'Quem tem o melhor custo-benefício?',
-    leaderboardTitle: 'Top do Bairro',
+    leaderboardTitle: 'Top por cozinha',
     leaderboardGlobal: 'Global',
     leaderboardBonde: 'No meu bonde',
+    noMatchups:
+      'Sem duelos disponíveis ainda. Avalie 2 picos da mesma cozinha em 30 dias pra desbloquear. 🥊',
+    pickMatchup: 'Escolhe o confronto',
+    start: 'Bora duelar 🥊',
+    winner: 'venceu o duelo! 🏆',
+    shareRecap: 'Compartilhar resultado',
+    seeLeaderboard: 'Ver leaderboard',
+    emptyBonde: 'Ninguém do seu bonde duelou nessa cozinha ainda.',
   },
   ai: {
     chatTitle: 'IA do Rango 🤖',

@@ -9,6 +9,13 @@ import { validateCpf, formatCpf } from '../../domain/logic/cpf'
 import { copy } from '../../copy/pt-BR'
 import { useUpdateUser, useSessionUser } from '../../lib/query/hooks'
 import { SlangLevel } from '../../domain/models'
+import { getCurrentPosition } from '../../lib/platform'
+
+// Approx coords for the cities the mock dataset covers (nearest-city heuristic).
+const CITY_COORDS: Record<string, [number, number]> = {
+  'São Paulo': [-23.5505, -46.6333],
+  'Ribeirão Preto': [-21.1775, -47.8103],
+}
 
 const STEPS = {
   WELCOME: 0,
@@ -41,9 +48,34 @@ export function OnboardingScreen() {
   const [selectedCity, setSelectedCity] = useState<string>('São Paulo')
   const [cpf, setCpf] = useState('')
   const [following, setFollowing] = useState<string[]>([])
-  
+  const [locating, setLocating] = useState(false)
+
   const { data: sessionUser } = useSessionUser()
   const updateUserMutation = useUpdateUser()
+
+  const handleUseLocation = async () => {
+    try {
+      setLocating(true)
+      const { latitude, longitude } = await getCurrentPosition()
+      // Snap to the nearest supported city (mock dataset has SP + Ribeirão only).
+      let nearest = CITIES[0]
+      let best = Infinity
+      for (const city of CITIES) {
+        const [lat, lng] = CITY_COORDS[city]
+        const dist = (lat - latitude) ** 2 + (lng - longitude) ** 2
+        if (dist < best) {
+          best = dist
+          nearest = city
+        }
+      }
+      setSelectedCity(nearest)
+      toast(`Achamos você perto de ${nearest}! 📍`, 'success')
+    } catch {
+      toast('Não rolou pegar sua localização', 'error')
+    } finally {
+      setLocating(false)
+    }
+  }
 
   const handleNext = () => {
     if (step < STEPS.DONE) {
@@ -214,11 +246,12 @@ export function OnboardingScreen() {
 
                 <Button
                   variant="outline"
-                  onClick={() => toast('Buscando localização...', 'info')}
+                  onClick={handleUseLocation}
+                  disabled={locating}
                   className="w-full flex items-center justify-center gap-2 border-[#2D2D2D] bg-[#1A1A1A] text-xs font-semibold rounded-xl py-4"
                 >
                   <MapPin size={14} />
-                  <span>{copy.onboarding.useLocation}</span>
+                  <span>{locating ? 'Buscando localização…' : copy.onboarding.useLocation}</span>
                 </Button>
               </div>
 

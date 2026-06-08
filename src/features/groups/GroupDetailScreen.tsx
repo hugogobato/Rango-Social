@@ -1,21 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import {
-  Users,
-  MessageSquare,
-  Trophy,
-  Plus,
-  Flame,
-  Check,
-  Award,
-  Vote,
-  TrendingUp,
-  X,
-} from 'lucide-react'
-import { Card, CardContent } from '../../components/ui/Card'
+import { Users, Plus, Check, Vote } from 'lucide-react'
+import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Sheet } from '../../components/ui/Sheet'
-import { Badge } from '../../components/ui/Badge'
 import { ReviewCard } from '../../components/shared/ReviewCard'
 import {
   useGroup,
@@ -26,7 +14,7 @@ import {
   useRestaurants,
 } from '../../lib/query/hooks'
 import { calculateRestaurantRanking } from '../../domain/logic/ranking'
-import { type Poll, type PollOption, type Group, type Review } from '../../domain/models'
+import { type Poll } from '../../domain/models'
 
 export function GroupDetailScreen() {
   const { groupId } = useParams<{ groupId: string }>()
@@ -535,8 +523,6 @@ export function GroupDetailScreen() {
               type="text"
               placeholder="Ex: Onde vamos amassar hoje?"
               value={pollQuestion}
-              onChange={(e) => setQuery(e.target.value)} // wait, type query? No, pollQuestion!
-              // Actually let's use setPollQuestion
               onChange={(e) => setPollQuestion(e.target.value)}
               className="w-full bg-[#242424] border border-[#2D2D2D] rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-primary font-bold"
             />

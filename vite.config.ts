@@ -60,5 +60,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    // Tests always run against the in-memory mock, regardless of .env.local.
+    env: { VITE_DATA_SOURCE: 'mock' },
   },
 })

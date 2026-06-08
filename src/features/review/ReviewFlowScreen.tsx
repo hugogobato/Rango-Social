@@ -226,7 +226,7 @@ export function ReviewFlowScreen() {
       try {
         await createRestaurantMutation.mutateAsync(newRest)
         finalRestaurantId = newId
-      } catch (err) {
+      } catch {
         toast('Erro ao cadastrar novo pico', 'error')
         return
       }
@@ -317,7 +317,7 @@ export function ReviewFlowScreen() {
         navigate('/')
       }
 
-    } catch (err) {
+    } catch {
       toast('Deu ruim ao postar review!', 'error')
     }
   }

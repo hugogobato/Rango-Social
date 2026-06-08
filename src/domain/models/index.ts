@@ -392,6 +392,12 @@ export interface IllnessReport {
   createdAt: string
 }
 
+/**
+ * The only illness shape ever returned to clients: the reporter's identity is
+ * stripped so reports can never be traced back to a user (anti-defamation, §1.6).
+ */
+export type PublicIllnessReport = Omit<IllnessReport, 'reporterUserId'>
+
 export interface DuelQuestion {
   aspect: MetricId
   prompt: string

@@ -12,6 +12,7 @@ import {
   type Comment,
   type Story,
   type IllnessReport,
+  type PublicIllnessReport,
   type IllnessSymptom,
   type RestaurantCategory,
   type RestaurantDuel,
@@ -116,7 +117,10 @@ export interface StoryRepository {
 }
 
 export interface IllnessRepository {
-  getIllnessReportsByRestaurant(restaurantId: string): Promise<IllnessReport[]>
+  // Returns the privacy-safe shape only — reporterUserId is never exposed to clients.
+  getIllnessReportsByRestaurant(
+    restaurantId: string
+  ): Promise<PublicIllnessReport[]>
   postIllnessReport(
     restaurantId: string,
     symptom: IllnessSymptom,

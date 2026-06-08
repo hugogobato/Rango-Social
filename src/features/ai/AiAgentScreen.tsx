@@ -1,16 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Sparkles, Send, Bot, User } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { toast } from '../../components/ui/Toast'
-import { useAiChatHistory, useSendAiMessage, useSessionUser } from '../../lib/query/hooks'
+import { useAiChatHistory, useSessionUser } from '../../lib/query/hooks'
+import { sendAiTurn, RATE_LIMITED, NOT_AUTHENTICATED } from '../../lib/ai/agent'
+import type { AiChatMessage } from '../../domain/models'
 import { copy } from '../../copy/pt-BR'
 
 export function AiAgentScreen() {
   const { data: sessionUser } = useSessionUser()
   const userId = sessionUser?.id || 'u_me'
 
+  const queryClient = useQueryClient()
   const { data: chatHistory, isLoading } = useAiChatHistory(userId)
-  const sendAiMessageMutation = useSendAiMessage()
 
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -26,41 +29,40 @@ export function AiAgentScreen() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() || isTyping) return
 
     const userText = input.trim()
     setInput('')
     setIsTyping(true)
 
+    // Optimistically echo the user's message while the reply is generated.
+    const optimistic: AiChatMessage = {
+      id: `tmp_${Date.now()}`,
+      userId,
+      role: 'user',
+      content: userText,
+      createdAt: new Date().toISOString(),
+    }
+    queryClient.setQueryData<AiChatMessage[]>(['aiChatHistory', userId], (old) => [
+      ...(old ?? []),
+      optimistic,
+    ])
+
     try {
-      // 1. Post User message
-      await sendAiMessageMutation.mutateAsync({
-        userId,
-        role: 'user',
-        content: userText,
-      })
-
-      // 2. Mock AI Agent reply
-      setTimeout(async () => {
-        let aiReply = 'Hum, deixa eu ver o que combina com seu bonde... 🧐'
-        if (userText.toLowerCase().includes('pizza')) {
-          aiReply = 'Pô, se a pegada é pizza, você PRECISA colar na *Fornazza*! A galera no seu bonde vive elogiando o custo-benefício de lá. Quer que eu te passe o endereço? 🍕🔥'
-        } else if (userText.toLowerCase().includes('hambúrguer') || userText.toLowerCase().includes('burger')) {
-          aiReply = 'Olha, para hambúrguer o *Podrão do Zé* é imbatível na larica da madrugada, mas se quer algo mais clean, a *Hamburgueria Gourmet* em Pinheiros tem nota 4.8 em Sabor pela galera! 🍔✨'
-        } else {
-          aiReply = 'Achei aqui! Com base no histórico de reviews que você curtiu, o japonês *Sushi Garden* é a melhor pedida hoje. O atendimento de lá é amassado demais (5/5)! Bora colar? 🍣👀'
-        }
-
-        await sendAiMessageMutation.mutateAsync({
-          userId,
-          role: 'assistant',
-          content: aiReply,
-        })
-        setIsTyping(false)
-      }, 1500)
-
+      await sendAiTurn(userId, userText)
     } catch (err) {
-      toast('Algo deu ruim no envio!', 'error')
+      const code = err instanceof Error ? err.message : ''
+      toast(
+        code === RATE_LIMITED
+          ? 'Calma aí, craque! Manda uma de cada vez 😅'
+          : code === NOT_AUTHENTICATED
+            ? 'Faça login pra conversar com a IA 🔐'
+            : 'Algo deu ruim no envio!',
+        'error'
+      )
+    } finally {
+      // Reconcile with the source of truth (drops the optimistic temp message).
+      queryClient.invalidateQueries({ queryKey: ['aiChatHistory', userId] })
       setIsTyping(false)
     }
   }

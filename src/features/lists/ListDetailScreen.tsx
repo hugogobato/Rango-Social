@@ -7,10 +7,10 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
-  X,
+  Check,
   Star,
 } from 'lucide-react'
-import { Card, CardContent } from '../../components/ui/Card'
+import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Sheet } from '../../components/ui/Sheet'
 import {
@@ -20,7 +20,7 @@ import {
   useRemoveRestaurantFromList,
   useUpdateList,
 } from '../../lib/query/hooks'
-import { type CustomList, type ListItem } from '../../domain/models'
+import { type CustomList } from '../../domain/models'
 
 export function ListDetailScreen() {
   const { listId } = useParams<{ listId: string }>()

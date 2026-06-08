@@ -1,11 +1,14 @@
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Home, Trophy, Plus, Bell, User, Sparkles } from 'lucide-react'
 import { copy } from '../copy/pt-BR'
+import { ScreenSkeleton } from '../components/shared/Skeletons'
 
 export function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
+  const reduceMotion = useReducedMotion()
   const currentPath = location.pathname
 
   useEffect(() => {
@@ -50,7 +53,19 @@ export function AppShell() {
 
       {/* Main Content Page Area */}
       <main className="mx-auto w-full max-w-md flex-1 px-4 py-4">
-        <Outlet />
+        <Suspense fallback={<ScreenSkeleton />}>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={currentPath}
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
+        </Suspense>
       </main>
 
       {/* Bottom Sticky Tab Navigation */}

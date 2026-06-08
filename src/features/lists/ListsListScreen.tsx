@@ -17,18 +17,24 @@ export function ListsListScreen() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
 
-  const myLists = lists?.filter((l) => l.userId === currentUser?.id) || []
-  const sharedLists = lists?.filter((l) => l.userId !== currentUser?.id) || []
+  const myLists = lists?.filter((l) => l.ownerId === currentUser?.id) || []
+  const sharedLists = lists?.filter((l) => l.ownerId !== currentUser?.id) || []
 
   const handleCreateList = () => {
     if (!name.trim() || !currentUser) return
 
     createListMutation.mutate(
       {
+        ownerId: currentUser.id,
         name: name.trim(),
         description: description.trim() || null,
-        userId: currentUser.id,
-        isPrivate: false,
+        iconUrl: null,
+        coverColor: null,
+        isPublic: true,
+        isWishlist: false,
+        collaborators: [],
+        sharedWith: [],
+        themes: [],
       },
       {
         onSuccess: (newList) => {

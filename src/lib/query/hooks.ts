@@ -396,6 +396,15 @@ export function useIllnessReports(restaurantId: string) {
   })
 }
 
+/** Whether the user may submit a new illness report (one per restaurant per 30 days). */
+export function useIllnessReportLimit(restaurantId: string, userId: string) {
+  return useQuery({
+    queryKey: ['illnessLimit', restaurantId, userId],
+    queryFn: () => db.illness.checkUserReportLimit(restaurantId, userId),
+    enabled: !!restaurantId && !!userId,
+  })
+}
+
 export function usePostIllnessReport() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -414,6 +423,7 @@ export function usePostIllnessReport() {
       queryClient.invalidateQueries({
         queryKey: ['illnessReports', restaurantId],
       })
+      queryClient.invalidateQueries({ queryKey: ['illnessLimit', restaurantId] })
       queryClient.invalidateQueries({ queryKey: ['restaurants', restaurantId] })
     },
   })

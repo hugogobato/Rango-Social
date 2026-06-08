@@ -19,4 +19,11 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Server-side code (Vercel functions + seed script) runs on Node, not the browser.
+    files: ['api/**/*.ts', 'scripts/**/*.ts'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { Card, CardContent } from '../../components/ui/Card'
+import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Sheet } from '../../components/ui/Sheet'
 import { useRestaurants } from '../../lib/query/hooks'
@@ -43,7 +43,7 @@ const CITY_COORDS: Record<string, [number, number]> = {
 }
 
 // Custom Leaflet Marker Icon with optional pulsing effect for vibe checks
-const createCustomMarker = (name: string, hasVibeCheck: boolean) => {
+const createCustomMarker = (_name: string, hasVibeCheck: boolean) => {
   return L.divIcon({
     className: 'custom-marker',
     html: `

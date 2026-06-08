@@ -1,21 +1,35 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, Eye, Camera } from 'lucide-react'
+import { X, Eye, Camera, MapPin } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { Sheet } from '../../components/ui/Sheet'
+import { Avatar } from '../../components/ui/Avatar'
 import { toast } from '../../components/ui/Toast'
-import { useStories, usePostStory, useSessionUser } from '../../lib/query/hooks'
+import {
+  useStories,
+  usePostStory,
+  useSessionUser,
+  useMarkStoryViewed,
+  useRestaurants,
+} from '../../lib/query/hooks'
+import { pickPhoto } from '../../lib/platform'
+import { copy } from '../../copy/pt-BR'
 
 export function StoriesScreen() {
   const navigate = useNavigate()
   const { data: stories, isLoading } = useStories()
   const { data: sessionUser } = useSessionUser()
+  const { data: restaurants } = useRestaurants()
   const postStoryMutation = usePostStory()
+  const { mutate: markStoryViewed } = useMarkStoryViewed()
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [progress, setProgress] = useState(0)
   const [isCreating, setIsCreating] = useState(false)
   const [caption, setCaption] = useState('')
+  const [taggedRestaurantId, setTaggedRestaurantId] = useState('')
+  const [isViewersOpen, setIsViewersOpen] = useState(false)
   const [imageUrl, setImageUrl] = useState('https://picsum.photos/seed/storygen/1080/1920')
 
   // Story autoplay interval
@@ -40,6 +54,15 @@ export function StoriesScreen() {
     return () => clearInterval(interval)
   }, [currentIndex, stories, isCreating, navigate])
 
+  // Mark the visible story as viewed (skip my own; idempotent in the repo).
+  useEffect(() => {
+    if (isCreating || !stories || stories.length === 0 || !sessionUser) return
+    const story = stories[currentIndex]
+    if (!story || story.userId === sessionUser.id) return
+    if (story.viewers.includes(sessionUser.id)) return
+    markStoryViewed({ storyId: story.id, userId: sessionUser.id })
+  }, [currentIndex, stories, sessionUser, isCreating, markStoryViewed])
+
   const handleNext = () => {
     if (!stories) return
     if (currentIndex < stories.length - 1) {
@@ -57,6 +80,11 @@ export function StoriesScreen() {
     }
   }
 
+  const handlePickPhoto = async () => {
+    const photo = await pickPhoto()
+    if (photo) setImageUrl(photo)
+  }
+
   const handleCreate = async () => {
     if (!sessionUser) return
     try {
@@ -64,13 +92,15 @@ export function StoriesScreen() {
         userId: sessionUser.id,
         photoUrl: imageUrl,
         caption: caption || undefined,
+        restaurantId: taggedRestaurantId || undefined,
       })
       toast('Story postado com sucesso! 📸', 'success')
       setIsCreating(false)
       setCaption('')
+      setTaggedRestaurantId('')
       setCurrentIndex(0)
       setProgress(0)
-    } catch (err) {
+    } catch {
       toast('Falha ao postar story', 'error')
     }
   }
@@ -95,10 +125,10 @@ export function StoriesScreen() {
           <div className="h-60 rounded-xl bg-[#242424] border border-[#2D2D2D] relative overflow-hidden flex items-center justify-center">
             <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
             <button
-              onClick={() => setImageUrl(`https://picsum.photos/seed/${Math.random()}/1080/1920`)}
+              onClick={handlePickPhoto}
               className="absolute bottom-3 right-3 bg-[#0F0F0F]/80 text-[10px] text-white font-extrabold px-3 py-1.5 rounded-full hover:bg-black"
             >
-              🔄 Tirar Outra Foto (Simulado)
+              📸 Trocar Foto
             </button>
           </div>
 
@@ -113,8 +143,31 @@ export function StoriesScreen() {
             />
           </div>
 
-          <Button onClick={handleCreate} className="w-full rounded-full bg-gradient-to-tr from-primary to-[#FF8C61]">
-            Lançar Story 🚀
+          {/* Restaurant tag (optional) */}
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-1 text-xs font-bold text-[#A0A0A0]">
+              <MapPin size={12} /> {copy.stories.tagRestaurant}
+            </label>
+            <select
+              value={taggedRestaurantId}
+              onChange={(e) => setTaggedRestaurantId(e.target.value)}
+              className="w-full bg-[#242424] border border-[#2D2D2D] rounded-xl px-3 py-3 text-xs text-white outline-none focus:border-primary"
+            >
+              <option value="">Sem marcação</option>
+              {restaurants?.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name} • {r.address.neighborhood}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <Button
+            onClick={handleCreate}
+            disabled={postStoryMutation.isPending}
+            className="w-full rounded-full bg-gradient-to-tr from-primary to-[#FF8C61]"
+          >
+            {postStoryMutation.isPending ? 'Lançando…' : 'Lançar Story 🚀'}
           </Button>
         </Card>
       </div>
@@ -133,6 +186,10 @@ export function StoriesScreen() {
   }
 
   const currentStory = stories[currentIndex]
+  const isMyStory = currentStory.userId === sessionUser?.id
+  const taggedRestaurant =
+    currentStory.restaurant ??
+    restaurants?.find((r) => r.id === currentStory.restaurantId)
 
   return (
     <div className="relative h-[calc(100vh-80px)] w-full max-w-md mx-auto rounded-3xl bg-[#000] overflow-hidden flex flex-col justify-between">
@@ -191,20 +248,68 @@ export function StoriesScreen() {
       <div className="absolute inset-y-20 left-0 w-1/3 z-20 cursor-pointer" onClick={handlePrev} />
       <div className="absolute inset-y-20 right-0 w-1/3 z-20 cursor-pointer" onClick={handleNext} />
 
-      {/* Bottom overlay with caption & viewers */}
-      <div className="relative z-10 p-4 space-y-4">
+      {/* Bottom overlay with restaurant tag, caption & viewers (z-30 to beat the nav hotspots) */}
+      <div className="relative z-30 p-4 space-y-3">
+        {/* Tagged restaurant chip */}
+        {taggedRestaurant && (
+          <button
+            onClick={() => navigate(`/restaurant/${taggedRestaurant.id}`)}
+            className="flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-[11px] font-bold text-white backdrop-blur-md"
+          >
+            <MapPin size={12} className="text-primary" />
+            <span>{taggedRestaurant.name}</span>
+          </button>
+        )}
+
         {currentStory.caption && (
           <p className="text-sm font-bold text-white text-shadow leading-relaxed">
             {currentStory.caption}
           </p>
         )}
 
-        {/* Viewer count for authors */}
-        <div className="flex items-center gap-1.5 text-white/80 text-[10px] font-bold">
-          <Eye size={12} />
-          <span>{currentStory.viewers.length} visualizações</span>
-        </div>
+        {/* Viewer list is visible to the author only (Instagram-style) */}
+        {isMyStory && (
+          <button
+            onClick={() => setIsViewersOpen(true)}
+            className="flex items-center gap-1.5 text-[11px] font-bold text-white/90"
+          >
+            <Eye size={13} />
+            <span>
+              {currentStory.viewers.length} {copy.stories.viewsLabel}
+            </span>
+          </button>
+        )}
       </div>
+
+      {/* Author viewer list */}
+      <Sheet
+        isOpen={isViewersOpen}
+        onClose={() => setIsViewersOpen(false)}
+        title={copy.stories.viewerTitle}
+      >
+        <div className="space-y-2 pb-6">
+          {currentStory.viewers.length === 0 ? (
+            <p className="py-8 text-center text-xs italic text-[#808080]">
+              {copy.stories.noViewers}
+            </p>
+          ) : (
+            currentStory.viewers.map((viewerId) => (
+              <div
+                key={viewerId}
+                className="flex items-center gap-2.5 rounded-xl border border-[#2D2D2D] bg-[#242424] p-2.5"
+              >
+                <Avatar
+                  fallback={viewerId.replace('u_', '').slice(0, 2).toUpperCase()}
+                  size="sm"
+                />
+                <span className="text-xs font-bold text-white">
+                  @{viewerId.replace('u_', '')}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </Sheet>
     </div>
   )
 }

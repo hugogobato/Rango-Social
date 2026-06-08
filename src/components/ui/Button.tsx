@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive'
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
   pill?: boolean
 }
 
@@ -30,6 +30,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               variant === 'destructive',
           },
           {
+            'px-2.5 py-1 text-[11px]': size === 'xs',
             'px-3 py-1.5 text-xs': size === 'sm',
             'px-5 py-2.5 text-sm': size === 'md',
             'px-6 py-3 text-base': size === 'lg',

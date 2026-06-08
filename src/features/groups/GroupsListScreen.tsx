@@ -20,6 +20,11 @@ const METRIC_LABELS: Record<MetricId, string> = {
   [MetricId.GLUTEN_FREE]: 'Sem Glúten',
   [MetricId.WAIT_TIME]: 'Tempo de Espera',
   [MetricId.CLEANLINESS]: 'Limpeza',
+  [MetricId.NOISE_LEVEL]: 'Nível de Ruído',
+  [MetricId.PARKING]: 'Estacionamento',
+  [MetricId.ACCESSIBILITY]: 'Acessibilidade',
+  [MetricId.DRINKS]: 'Bebidas',
+  [MetricId.DESSERTS]: 'Sobremesas',
 }
 
 export function GroupsListScreen() {

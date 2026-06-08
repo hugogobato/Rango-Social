@@ -1,176 +1,310 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Trophy, Check } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import confetti from 'canvas-confetti'
+import { Trophy, Swords, Check, ChevronLeft, Share2 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { toast } from '../../components/ui/Toast'
-import { useRestaurants, usePostDuel, useSessionUser } from '../../lib/query/hooks'
-import { RestaurantCategory, MetricId } from '../../domain/models'
+import { DuelRecapCard } from '../../components/shared/DuelRecapCard'
+import {
+  useReviews,
+  usePostDuel,
+  useSessionUser,
+} from '../../lib/query/hooks'
+import {
+  detectDuelOpportunities,
+  computeDuelWinner,
+  CUISINE_LABELS,
+  type DuelOpportunity,
+} from '../../domain/logic/duel'
 import { copy } from '../../copy/pt-BR'
-
-const QUESTIONS = [
-  { aspect: MetricId.TASTE, prompt: 'Quem tem o melhor sabor?' },
-  { aspect: MetricId.COST_BENEFIT, prompt: 'Quem tem o melhor custo-benefício?' },
-  { aspect: MetricId.SERVICE, prompt: 'Quem atende melhor?' },
-]
 
 export function DuelScreen() {
   const navigate = useNavigate()
-  const { data: restaurants } = useRestaurants()
   const { data: sessionUser } = useSessionUser()
+  const { data: myReviews } = useReviews({ userId: sessionUser?.id })
   const postDuelMutation = usePostDuel()
 
-  const [cuisine, setCuisine] = useState<RestaurantCategory>(RestaurantCategory.PODRAO)
-  const [activeQuestionIdx, setActiveQuestionIdx] = useState(0)
+  // Only the current user's reviews feed the trigger (guards the undefined-userId render).
+  const opportunities = useMemo(
+    () =>
+      detectDuelOpportunities(
+        (myReviews ?? []).filter((r) => r.userId === sessionUser?.id)
+      ),
+    [myReviews, sessionUser?.id]
+  )
+
+  const [selected, setSelected] = useState<DuelOpportunity | null>(null)
+  const [questionIdx, setQuestionIdx] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [isFinished, setIsFinished] = useState(false)
+  const [winnerId, setWinnerId] = useState<string | null>(null)
+  const [isRecapOpen, setIsRecapOpen] = useState(false)
 
-  // Filter restaurants by chosen cuisine
-  const eligible = restaurants?.filter((r) => r.categories.includes(cuisine)) || []
-  const restaurantA = eligible[0]
-  const restaurantB = eligible[1]
-
-  const handleSelectWinner = (aspect: MetricId, chosenId: string) => {
-    setAnswers((prev) => ({ ...prev, [aspect]: chosenId }))
-
-    if (activeQuestionIdx < QUESTIONS.length - 1) {
-      setActiveQuestionIdx(activeQuestionIdx + 1)
-    } else {
-      setIsFinished(true)
-    }
+  const resetFlow = () => {
+    setQuestionIdx(0)
+    setAnswers({})
+    setWinnerId(null)
   }
 
-  const handleFinishDuel = async () => {
-    if (!restaurantA || !restaurantB || !sessionUser) return
+  const startMatchup = (op: DuelOpportunity) => {
+    setSelected(op)
+    resetFlow()
+  }
 
-    // Calculate winners per aspect
-    const votesForA = Object.values(answers).filter((id) => id === restaurantA.id).length
-    const overallWinnerId = votesForA >= 2 ? restaurantA.id : restaurantB.id
-
-
-
-    const questionsPayload = QUESTIONS.map((q) => ({
-      aspect: q.aspect,
-      prompt: q.prompt,
-      chosenId: answers[q.aspect],
-    }))
+  const finish = async (finalAnswers: Record<string, string>) => {
+    if (!selected || !sessionUser) return
+    const wId = computeDuelWinner(
+      finalAnswers,
+      selected.aRestaurantId,
+      selected.bRestaurantId
+    )
+    setWinnerId(wId)
+    confetti({ particleCount: 140, spread: 90, origin: { y: 0.7 } })
 
     try {
       await postDuelMutation.mutateAsync({
         userId: sessionUser.id,
-        cuisine,
-        aId: restaurantA.id,
-        bId: restaurantB.id,
-        questions: questionsPayload,
-        winnerId: overallWinnerId,
+        cuisine: selected.cuisine,
+        aId: selected.aRestaurantId,
+        bId: selected.bRestaurantId,
+        questions: selected.questions.map((q) => ({
+          aspect: q.aspect,
+          prompt: q.prompt,
+          chosenId: finalAnswers[q.aspect],
+        })),
+        winnerId: wId,
       })
-
-      toast('Duelo finalizado! ELOs recalculados. 🥊', 'success')
-      navigate('/duel/leaderboard')
-    } catch (err) {
+    } catch {
       toast('Deu ruim ao registrar o duelo', 'error')
     }
   }
 
-  if (eligible.length < 2) {
+  const answer = (aspect: string, chosenId: string) => {
+    if (!selected) return
+    const next = { ...answers, [aspect]: chosenId }
+    setAnswers(next)
+    if (questionIdx < selected.questions.length - 1) {
+      setQuestionIdx(questionIdx + 1)
+    } else {
+      finish(next)
+    }
+  }
+
+  const header = (
+    <div className="flex items-start justify-between">
+      <div>
+        <h1 className="flex items-center gap-2 text-2xl font-extrabold text-white">
+          <Swords className="text-primary" />
+          <span>{copy.duel.title}</span>
+        </h1>
+        <p className="mt-1 text-xs text-[#A0A0A0]">{copy.duel.subtitle}</p>
+      </div>
+      <Link to="/duel/leaderboard">
+        <button className="rounded-full bg-[#1A1A1A] border border-[#2D2D2D] px-3 py-2 text-[10px] font-black uppercase text-primary">
+          🏆 Ranking
+        </button>
+      </Link>
+    </div>
+  )
+
+  // --- Empty state (no eligible matchups) ---
+  if (opportunities.length === 0 && !selected) {
     return (
-      <div className="space-y-6 max-w-md mx-auto text-center py-16">
-        <h1 className="text-xl font-extrabold text-white">Duelos 🥊</h1>
-        <p className="text-xs text-[#A0A0A0]">
-          Não temos restaurantes suficientes da culinária <span className="font-bold text-primary">{cuisine}</span> cadastrados para duelar hoje.
-        </p>
-        <div className="pt-4 flex flex-col gap-2">
-          {Object.values(RestaurantCategory).slice(0, 5).map((cat) => (
-            <Button key={cat} variant="outline" size="sm" onClick={() => setCuisine(cat)} className="rounded-full">
-              Mudar para {cat}
-            </Button>
+      <div className="mx-auto max-w-md space-y-6 pb-10">
+        {header}
+        <Card className="border-[#2D2D2D] bg-[#1A1A1A] p-8 text-center">
+          <Swords size={32} className="mx-auto text-[#3A3A3A]" />
+          <p className="mt-3 text-xs leading-relaxed text-[#A0A0A0]">
+            {copy.duel.noMatchups}
+          </p>
+          <Link to="/review">
+            <Button className="mt-5 rounded-full text-xs">Mandar uma real 🚀</Button>
+          </Link>
+        </Card>
+      </div>
+    )
+  }
+
+  // --- Matchup picker ---
+  if (!selected) {
+    return (
+      <div className="mx-auto max-w-md space-y-6 pb-10">
+        {header}
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#808080]">
+          {copy.duel.pickMatchup}
+        </h3>
+        <div className="space-y-3">
+          {opportunities.map((op) => (
+            <Card
+              key={`${op.cuisine}-${op.aRestaurantId}-${op.bRestaurantId}`}
+              className="border-[#2D2D2D] bg-[#1A1A1A] p-4"
+            >
+              <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[9px] font-black uppercase text-primary">
+                {CUISINE_LABELS[op.cuisine]}
+              </span>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <span className="flex-1 truncate text-sm font-bold text-white">
+                  {op.aName}
+                </span>
+                <span className="text-xs font-black text-[#808080]">VS</span>
+                <span className="flex-1 truncate text-right text-sm font-bold text-white">
+                  {op.bName}
+                </span>
+              </div>
+              <Button
+                onClick={() => startMatchup(op)}
+                className="mt-4 w-full rounded-full bg-gradient-to-tr from-primary to-[#FF8C61] text-xs font-bold"
+              >
+                {copy.duel.start}
+              </Button>
+            </Card>
           ))}
         </div>
       </div>
     )
   }
 
-  const currentQuestion = QUESTIONS[activeQuestionIdx]
+  const winnerName =
+    winnerId === selected.aRestaurantId ? selected.aName : selected.bName
+  const loserName =
+    winnerId === selected.aRestaurantId ? selected.bName : selected.aName
 
-  return (
-    <div className="space-y-6 max-w-md mx-auto pb-10">
-      <div>
-        <h1 className="text-2xl font-extrabold text-white flex items-center gap-2">
-          <span>{copy.duel.title}</span>
-        </h1>
-        <p className="text-xs text-[#A0A0A0] mt-1">{copy.duel.subtitle}</p>
-      </div>
-
-      {!isFinished ? (
-        <Card className="border-[#2D2D2D] bg-[#1A1A1A] p-6 space-y-6">
-          {/* Question Indicator */}
-          <div className="flex justify-between items-center text-xs font-bold text-[#808080]">
-            <span>Questão {activeQuestionIdx + 1} de {QUESTIONS.length}</span>
-            <span>Métrica: {currentQuestion.aspect}</span>
-          </div>
-
-          <h3 className="text-lg font-black text-center text-white">
-            {currentQuestion.prompt}
-          </h3>
-
-          <div className="grid gap-3 pt-2">
-            {/* Restaurant A Option */}
-            <button
-              onClick={() => handleSelectWinner(currentQuestion.aspect, restaurantA.id)}
-              className="w-full text-left p-4 rounded-xl border-2 border-[#2D2D2D] bg-[#242424] hover:border-primary transition-all flex justify-between items-center"
+  // --- Result reveal ---
+  if (winnerId) {
+    return (
+      <div className="mx-auto max-w-md space-y-6 pb-10">
+        {header}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+        >
+          <Card className="border-primary/30 bg-primary/5 p-6 text-center">
+            <motion.div
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.1, type: 'spring', stiffness: 260, damping: 14 }}
+              className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-400/15 text-amber-400"
             >
-              <div>
-                <p className="text-sm font-bold text-white">{restaurantA.name}</p>
-                <p className="text-[10px] text-[#A0A0A0]">{restaurantA.address.neighborhood}</p>
-              </div>
-              <span className="text-lg">🥊</span>
-            </button>
-
-            {/* Restaurant B Option */}
-            <button
-              onClick={() => handleSelectWinner(currentQuestion.aspect, restaurantB.id)}
-              className="w-full text-left p-4 rounded-xl border-2 border-[#2D2D2D] bg-[#242424] hover:border-primary transition-all flex justify-between items-center"
-            >
-              <div>
-                <p className="text-sm font-bold text-white">{restaurantB.name}</p>
-                <p className="text-[10px] text-[#A0A0A0]">{restaurantB.address.neighborhood}</p>
-              </div>
-              <span className="text-lg">🥊</span>
-            </button>
-          </div>
-        </Card>
-      ) : (
-        <Card className="border-[#2D2D2D] bg-[#1A1A1A] p-6 text-center space-y-6">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20">
-            <Trophy size={26} />
-          </div>
-
-          <div>
-            <h2 className="text-xl font-black text-white">Duelo Encerrado!</h2>
-            <p className="text-xs text-[#A0A0A0] mt-1">
-              Computamos suas respostas. Pronto para ver as novas pontuações de ELO?
+              <Trophy size={30} />
+            </motion.div>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-widest text-[#808080]">
+              {CUISINE_LABELS[selected.cuisine]}
             </p>
-          </div>
+            <h2 className="mt-1 text-2xl font-black text-white">{winnerName}</h2>
+            <p className="text-xs text-[#A0A0A0]">{copy.duel.winner}</p>
+            <p className="mt-1 text-[11px] text-[#808080]">
+              bateu <span className="font-bold text-[#A0A0A0]">{loserName}</span>
+            </p>
 
-          <div className="p-4 bg-[#242424] rounded-xl space-y-2 text-left text-xs">
-            <h4 className="font-bold text-[#808080] uppercase tracking-wider text-[9px]">Gabarito do Cria</h4>
-            {QUESTIONS.map((q) => {
-              const winnerName = answers[q.aspect] === restaurantA.id ? restaurantA.name : restaurantB.name
-              return (
-                <div key={q.aspect} className="flex justify-between items-center border-b border-[#2D2D2D] pb-1.5">
-                  <span className="text-[#A0A0A0]">{q.prompt}</span>
-                  <span className="font-bold text-white flex items-center gap-1">
-                    <Check size={11} className="text-primary" /> {winnerName}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+            <div className="mt-6 flex flex-col gap-2">
+              <Button
+                onClick={() => setIsRecapOpen(true)}
+                className="flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-to-tr from-primary to-[#FF8C61] text-xs font-bold"
+              >
+                <Share2 size={14} /> {copy.duel.shareRecap}
+              </Button>
+              <Button
+                onClick={() => navigate('/duel/leaderboard')}
+                variant="outline"
+                className="w-full rounded-full border-[#2D2D2D] text-xs"
+              >
+                {copy.duel.seeLeaderboard}
+              </Button>
+              <button
+                onClick={() => setSelected(null)}
+                className="text-[11px] font-bold text-[#808080] hover:text-white"
+              >
+                Duelar de novo
+              </button>
+            </div>
+          </Card>
+        </motion.div>
 
-          <Button onClick={handleFinishDuel} className="w-full rounded-full bg-gradient-to-tr from-primary to-[#FF8C61]">
-            Calcular Novo ELO 📈
-          </Button>
-        </Card>
+        <DuelRecapCard
+          isOpen={isRecapOpen}
+          onClose={() => setIsRecapOpen(false)}
+          cuisineLabel={CUISINE_LABELS[selected.cuisine]}
+          winnerName={winnerName}
+          loserName={loserName}
+        />
+      </div>
+    )
+  }
+
+  // --- Question flow ---
+  const currentQuestion = selected.questions[questionIdx]
+  return (
+    <div className="mx-auto max-w-md space-y-6 pb-10">
+      {header}
+      <Card className="space-y-6 border-[#2D2D2D] bg-[#1A1A1A] p-6">
+        <div className="flex items-center justify-between text-xs font-bold text-[#808080]">
+          <button
+            onClick={() => setSelected(null)}
+            className="flex items-center gap-1 hover:text-white"
+          >
+            <ChevronLeft size={14} /> Trocar
+          </button>
+          <span>
+            Questão {questionIdx + 1} de {selected.questions.length}
+          </span>
+        </div>
+
+        {/* Progress bar */}
+        <div className="flex gap-1.5">
+          {selected.questions.map((_, idx) => (
+            <div
+              key={idx}
+              className={`h-1 flex-1 rounded-full ${
+                idx <= questionIdx ? 'bg-primary' : 'bg-[#2D2D2D]'
+              }`}
+            />
+          ))}
+        </div>
+
+        <h3 className="text-center text-lg font-black text-white">
+          {currentQuestion.prompt}
+        </h3>
+
+        <div className="grid gap-3 pt-2">
+          {[
+            { id: selected.aRestaurantId, name: selected.aName },
+            { id: selected.bRestaurantId, name: selected.bName },
+          ].map((r) => (
+            <button
+              key={r.id}
+              onClick={() => answer(currentQuestion.aspect, r.id)}
+              className="flex w-full items-center justify-between rounded-xl border-2 border-[#2D2D2D] bg-[#242424] p-4 text-left transition-all hover:border-primary"
+            >
+              <span className="text-sm font-bold text-white">{r.name}</span>
+              <span className="text-lg">🥊</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* Running tally */}
+      {Object.keys(answers).length > 0 && (
+        <div className="space-y-1.5 px-1">
+          {selected.questions.slice(0, questionIdx).map((q) => {
+            const chosenName =
+              answers[q.aspect] === selected.aRestaurantId
+                ? selected.aName
+                : selected.bName
+            return (
+              <div
+                key={q.aspect}
+                className="flex items-center justify-between text-[11px] text-[#808080]"
+              >
+                <span>{q.prompt}</span>
+                <span className="flex items-center gap-1 font-bold text-white">
+                  <Check size={11} className="text-primary" /> {chosenName}
+                </span>
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )

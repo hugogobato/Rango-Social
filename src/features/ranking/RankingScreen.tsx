@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Trophy, Flame, MapPin, ChevronDown, Check } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
-import { Button } from '../../components/ui/Button'
 import { Sheet } from '../../components/ui/Sheet'
-import { Badge } from '../../components/ui/Badge'
 import {
   useRestaurants,
   useReviews,
@@ -29,6 +27,11 @@ const METRIC_LABELS: Record<MetricId, string> = {
   [MetricId.GLUTEN_FREE]: 'Sem Glúten',
   [MetricId.WAIT_TIME]: 'Tempo de Espera',
   [MetricId.CLEANLINESS]: 'Limpeza',
+  [MetricId.NOISE_LEVEL]: 'Nível de Ruído',
+  [MetricId.PARKING]: 'Estacionamento',
+  [MetricId.ACCESSIBILITY]: 'Acessibilidade',
+  [MetricId.DRINKS]: 'Bebidas',
+  [MetricId.DESSERTS]: 'Sobremesas',
 }
 
 const CITIES = ['São Paulo', 'Ribeirão Preto']
@@ -164,7 +167,6 @@ export function RankingScreen() {
         const hypeScore = reviews48h * 2 + (media7d - media14d)
 
         const velocity = reviews48h
-        const hasVibeChecks = restaurant.vibeCheckCount > 0
 
         // Custom badge indicators based on specification
         let badgeType: 'trending' | 'hype' | null = null
@@ -347,7 +349,7 @@ export function RankingScreen() {
           <div className="text-center py-12 text-xs text-[#808080]">Calculando notas da tropa…</div>
         ) : displayList.length > 0 ? (
           displayList.map((item) => {
-            const { restaurant, position, scoreDisplay, scoreLabel, isTrending, badgeType } = item
+            const { restaurant, position, scoreDisplay, scoreLabel, badgeType } = item
             return (
               <Link key={restaurant.id} to={`/restaurant/${restaurant.id}`}>
                 <Card className="border-[#2D2D2D] bg-[#1A1A1A] hover:border-[#444] transition-all overflow-hidden relative group">

@@ -63,3 +63,23 @@ export function calculateStreak(
 
   return streak
 }
+
+/**
+ * True when the user has a live streak (anchored on yesterday) but hasn't reviewed
+ * today yet — i.e. one review today keeps the streak alive. Drives the streak warning.
+ */
+export function isStreakAtRisk(visitDates: string[], todayStr?: string): boolean {
+  const streak = calculateStreak(visitDates, todayStr)
+  if (streak === 0) return false
+
+  const today = todayStr ?? formatTodayLocal()
+  return !visitDates.includes(today)
+}
+
+function formatTodayLocal(): string {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
