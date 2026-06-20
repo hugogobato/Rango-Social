@@ -30,6 +30,7 @@ import {
 
 const DEFAULT_PREFS: User['preferences'] = {
   defaultCity: null,
+  defaultState: null,
   notifyLikes: true,
   notifyComments: true,
   notifyGroupActivity: true,

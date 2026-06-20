@@ -29,6 +29,12 @@ export function AuthScreen() {
   const refreshSession = () =>
     queryClient.invalidateQueries({ queryKey: ['sessionUser'] })
 
+  // New accounts still need to pick a city/CPF; returning users go home.
+  const nextRoute = () =>
+    localStorage.getItem('hasCompletedOnboarding') === 'true'
+      ? '/'
+      : '/onboarding'
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isSupabaseConfigured) {
@@ -60,12 +66,12 @@ export function AuthScreen() {
         })
         await refreshSession()
         toast('Conta criada! Bora amassar 🚀', 'success')
-        navigate('/')
+        navigate('/onboarding')
       } else {
         await signInWithEmail(email.trim(), password)
         await refreshSession()
         toast('Tamo junto! 👊', 'success')
-        navigate('/')
+        navigate(nextRoute())
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Deu ruim, tenta de novo.'

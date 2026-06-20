@@ -4,6 +4,8 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Home, Trophy, Plus, Bell, User, Sparkles } from 'lucide-react'
 import { copy } from '../copy/pt-BR'
 import { ScreenSkeleton } from '../components/shared/Skeletons'
+import { useSessionUser } from '../lib/query/hooks'
+import { isSupabaseConfigured } from '../data/supabase/client'
 
 export function AppShell() {
   const location = useLocation()
@@ -11,12 +13,30 @@ export function AppShell() {
   const reduceMotion = useReducedMotion()
   const currentPath = location.pathname
 
+  const { data: sessionUser, isLoading: sessionLoading } = useSessionUser()
+
+  // Gate order: authenticated (when a backend is configured) → onboarded → app.
+  // Without a Supabase session every write is blocked by RLS (auth.uid() is null),
+  // which is why reviews/stories silently failed to post.
+  const needsAuth = isSupabaseConfigured && !sessionLoading && !sessionUser
+  const onboardingDone =
+    localStorage.getItem('hasCompletedOnboarding') === 'true'
+
   useEffect(() => {
-    const completed = localStorage.getItem('hasCompletedOnboarding') === 'true'
-    if (!completed) {
-      navigate('/onboarding')
+    if (isSupabaseConfigured && sessionLoading) return
+    if (needsAuth) {
+      navigate('/auth', { replace: true })
+      return
     }
-  }, [navigate])
+    if (!onboardingDone) {
+      navigate('/onboarding', { replace: true })
+    }
+  }, [needsAuth, onboardingDone, sessionLoading, navigate])
+
+  // Avoid flashing the authenticated shell before the redirect lands.
+  if ((isSupabaseConfigured && sessionLoading) || needsAuth || !onboardingDone) {
+    return <ScreenSkeleton />
+  }
 
   const isTabActive = (path: string) => {
     if (path === '/' && currentPath === '/') return true

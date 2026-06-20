@@ -149,6 +149,7 @@ function getCategoryLabel(cat: RestaurantCategory): string {
 
 const defaultPreferences = (defaultCity: string | null): UserPreferences => ({
   defaultCity,
+  defaultState: defaultCity === 'Ribeirão Preto' || defaultCity === 'São Paulo' ? 'SP' : null,
   notifyLikes: true,
   notifyComments: true,
   notifyGroupActivity: true,

@@ -114,6 +114,8 @@ export enum IllnessSymptom {
 
 export interface UserPreferences {
   defaultCity: string | null
+  /** Brazilian state (UF, e.g. "SP") paired with {@link defaultCity}. */
+  defaultState: string | null
   notifyLikes: boolean
   notifyComments: boolean
   notifyGroupActivity: boolean

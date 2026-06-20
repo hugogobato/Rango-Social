@@ -29,8 +29,8 @@ export function HomeScreen() {
       <section className="space-y-2">
         <h3 className="text-xs font-bold uppercase tracking-wider text-[#808080]">Stories da Galera</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-          {/* Post Story Add button */}
-          <Link to="/stories" className="flex flex-col items-center flex-shrink-0 gap-1.5">
+          {/* Post Story Add button → opens the composer directly (compose=1) */}
+          <Link to="/stories?compose=1" className="flex flex-col items-center flex-shrink-0 gap-1.5">
             <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-[#2D2D2D] bg-[#1A1A1A] hover:bg-[#252525] transition-all">
               <Plus size={20} className="text-primary" />
             </div>

@@ -16,16 +16,19 @@ interface ReviewDraftState {
   resetDraft: () => void
 }
 
+/** Today's date (yyyy-mm-dd), evaluated fresh each call. */
+const today = () => new Date().toISOString().split('T')[0]
+
 const initialDraft = {
   restaurantId: '',
-  visitDate: new Date().toISOString().split('T')[0],
+  visitDate: today(),
   partySize: 1,
   totalSpent: undefined,
   overallScore: 3,
   comment: '',
-  companions: [],
+  companions: [] as string[],
   targetDestinations: [{ type: 'profile' as const, id: 'u_me' }],
-  metrics: {},
+  metrics: {} as Record<string, number>,
 }
 
 export const useReviewDraftStore = create<ReviewDraftState>()(
@@ -33,10 +36,29 @@ export const useReviewDraftStore = create<ReviewDraftState>()(
     (set) => ({
       ...initialDraft,
       updateDraft: (fields) => set((state) => ({ ...state, ...fields })),
-      resetDraft: () => set(initialDraft),
+      resetDraft: () => set({ ...initialDraft, visitDate: today() }),
     }),
     {
       name: 'review-draft-storage',
+      // Never persist the visit date — otherwise the field freezes at whatever
+      // "today" was the first time the draft was saved and never advances. We
+      // whitelist the in-progress fields and always re-seed visitDate with the
+      // real current date on rehydration.
+      partialize: (s) => ({
+        restaurantId: s.restaurantId,
+        partySize: s.partySize,
+        totalSpent: s.totalSpent,
+        overallScore: s.overallScore,
+        comment: s.comment,
+        companions: s.companions,
+        targetDestinations: s.targetDestinations,
+        metrics: s.metrics,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<ReviewDraftState>),
+        visitDate: today(),
+      }),
     }
   )
 )

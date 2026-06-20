@@ -334,6 +334,24 @@ begin
   where id = p_story_id and not (p_viewer = any(viewers));
 end $$;
 
+-- Hard-delete expired ephemeral content (24h stories, 4h vibe checks) so the
+-- tables don't grow without bound. Reads already hide expired rows; this just
+-- reclaims storage. Invoked by /api/cron/cleanup-expired (Vercel Cron) and/or
+-- the optional pg_cron schedule below.
+create or replace function public.cleanup_expired_content()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  delete from public.stories     where expires_at < now();
+  delete from public.vibe_checks where expires_at < now();
+end $$;
+
+-- OPTIONAL backend-native schedule (independent of Vercel Cron). Requires the
+-- pg_cron extension (enable once in the Supabase dashboard → Database → Extensions).
+-- Uncomment to run the cleanup every hour:
+--   create extension if not exists pg_cron;
+--   select cron.schedule('cleanup-expired', '0 * * * *',
+--                        $$ select public.cleanup_expired_content() $$);
+
 -- ============================================================================
 -- VIEWS (illness privacy — reporter_user_id is NEVER exposed here)
 -- ============================================================================

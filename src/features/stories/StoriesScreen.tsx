@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { X, Eye, Camera, MapPin } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -18,6 +18,7 @@ import { copy } from '../../copy/pt-BR'
 
 export function StoriesScreen() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { data: stories, isLoading } = useStories()
   const { data: sessionUser } = useSessionUser()
   const { data: restaurants } = useRestaurants()
@@ -26,7 +27,10 @@ export function StoriesScreen() {
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [progress, setProgress] = useState(0)
-  const [isCreating, setIsCreating] = useState(false)
+  // Open straight into the composer when arriving via the "Postar" button.
+  const [isCreating, setIsCreating] = useState(
+    () => searchParams.get('compose') === '1'
+  )
   const [caption, setCaption] = useState('')
   const [taggedRestaurantId, setTaggedRestaurantId] = useState('')
   const [isViewersOpen, setIsViewersOpen] = useState(false)
@@ -85,6 +89,15 @@ export function StoriesScreen() {
     if (photo) setImageUrl(photo)
   }
 
+  // Leave the composer and drop the ?compose=1 flag from the URL.
+  const closeComposer = () => {
+    setIsCreating(false)
+    if (searchParams.has('compose')) {
+      searchParams.delete('compose')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }
+
   const handleCreate = async () => {
     if (!sessionUser) return
     try {
@@ -95,7 +108,7 @@ export function StoriesScreen() {
         restaurantId: taggedRestaurantId || undefined,
       })
       toast('Story postado com sucesso! 📸', 'success')
-      setIsCreating(false)
+      closeComposer()
       setCaption('')
       setTaggedRestaurantId('')
       setCurrentIndex(0)
@@ -116,7 +129,7 @@ export function StoriesScreen() {
           <h1 className="text-xl font-extrabold text-white flex items-center gap-1.5">
             <Camera className="text-primary" /> Novo Story
           </h1>
-          <button onClick={() => setIsCreating(false)} className="text-white hover:opacity-85">
+          <button onClick={closeComposer} className="text-white hover:opacity-85">
             <X size={20} />
           </button>
         </div>

@@ -1,6 +1,13 @@
 # Dependency directories
 node_modules/
 
+# Capacitor native projects — regenerated from capacitor.config.ts via
+# `npx cap add android` / `npx cap add ios`. Kept out of git so the repo stays
+# web-first; run the add command locally before building the native shells.
+android/
+ios/
+.gradle/
+
 # Build outputs (Vite/PWA)
 dist/
 dist-ssr/

@@ -1,17 +1,27 @@
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { Settings, LogOut, Moon, Volume2, Shield } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { toast } from '../../components/ui/Toast'
 import { copy } from '../../copy/pt-BR'
+import { signOut } from '../../lib/auth'
+import { isSupabaseConfigured } from '../../data/supabase/client'
 
 export function SettingsScreen() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      if (isSupabaseConfigured) await signOut()
+    } catch {
+      // Sign-out failures shouldn't trap the user in the app.
+    }
     localStorage.removeItem('hasCompletedOnboarding')
+    await queryClient.invalidateQueries({ queryKey: ['sessionUser'] })
     toast('Até a próxima, cria! 👋', 'info')
-    navigate('/onboarding')
+    navigate(isSupabaseConfigured ? '/auth' : '/onboarding', { replace: true })
   }
 
   return (

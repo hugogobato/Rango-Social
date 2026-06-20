@@ -14,6 +14,17 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+// Keep the city picker hermetic — no real IBGE/Nominatim network calls.
+vi.mock('../../lib/brazil', async () => {
+  const actual =
+    await vi.importActual<typeof import('../../lib/brazil')>('../../lib/brazil')
+  return {
+    ...actual,
+    fetchCitiesByUf: vi.fn().mockResolvedValue(['São Paulo', 'Campinas']),
+    reverseGeocode: vi.fn().mockResolvedValue({ uf: null, city: null }),
+  }
+})
+
 describe('OnboardingScreen', () => {
   it('renders welcome screen step first', () => {
     render(
@@ -49,6 +60,13 @@ describe('OnboardingScreen', () => {
     await waitFor(() => {
       expect(screen.getByText('Escolhe sua cidade')).toBeInTheDocument()
     })
+
+    // Pick a state, then choose a city from the IBGE-backed combobox.
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'SP' } })
+    const cityInput = await screen.findByPlaceholderText('Digita pra buscar…')
+    fireEvent.focus(cityInput)
+    fireEvent.change(cityInput, { target: { value: 'São' } })
+    fireEvent.mouseDown(await screen.findByText('São Paulo'))
 
     // Proceed to Step 3 (CPF)
     fireEvent.click(screen.getByRole('button', { name: /próximo/i }))

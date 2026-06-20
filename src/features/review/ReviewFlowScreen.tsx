@@ -200,7 +200,7 @@ export function ReviewFlowScreen() {
           complement: null,
           neighborhood: values.newNeighborhood || 'Centro',
           city: sessionUser.preferences.defaultCity || 'São Paulo',
-          state: 'SP',
+          state: sessionUser.preferences.defaultState || 'SP',
           zipCode: null,
           fullFormatted: `${values.newNeighborhood || 'Centro'}, ${sessionUser.preferences.defaultCity || 'São Paulo'}`,
         },

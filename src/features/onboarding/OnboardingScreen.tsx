@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, ShieldAlert, Sparkles, Check } from 'lucide-react'
+import { ShieldAlert, Sparkles, Check } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card'
 import { toast } from '../../components/ui/Toast'
@@ -9,13 +9,8 @@ import { validateCpf, formatCpf } from '../../domain/logic/cpf'
 import { copy } from '../../copy/pt-BR'
 import { useUpdateUser, useSessionUser } from '../../lib/query/hooks'
 import { SlangLevel } from '../../domain/models'
-import { getCurrentPosition } from '../../lib/platform'
-
-// Approx coords for the cities the mock dataset covers (nearest-city heuristic).
-const CITY_COORDS: Record<string, [number, number]> = {
-  'São Paulo': [-23.5505, -46.6333],
-  'Ribeirão Preto': [-21.1775, -47.8103],
-}
+import { isSupabaseConfigured } from '../../data/supabase/client'
+import { LocationPicker } from '../../components/shared/LocationPicker'
 
 const STEPS = {
   WELCOME: 0,
@@ -33,8 +28,6 @@ const STYLES = [
   { id: 'BARATIN', title: '💸 Baratin', desc: 'Focado no custo-benefício, rango bom e barato.' },
 ]
 
-const CITIES = ['São Paulo', 'Ribeirão Preto']
-
 const MOCK_INFLUENCERS = [
   { id: 'u_dudacomida', name: 'Duda Piva', username: 'dudacomida', bio: 'Só rango fino e review sem filtro 💅' },
   { id: 'u_pedroleitao', name: 'Pedro Leitão', username: 'pedroleitao', bio: 'Boca livre profissional. Amasso sem dó 🐷' },
@@ -45,37 +38,21 @@ export function OnboardingScreen() {
   const navigate = useNavigate()
   const [step, setStep] = useState(STEPS.WELCOME)
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null)
-  const [selectedCity, setSelectedCity] = useState<string>('São Paulo')
+  const [selectedCity, setSelectedCity] = useState<string>('')
+  const [selectedUf, setSelectedUf] = useState<string>('')
   const [cpf, setCpf] = useState('')
   const [following, setFollowing] = useState<string[]>([])
-  const [locating, setLocating] = useState(false)
 
-  const { data: sessionUser } = useSessionUser()
+  const { data: sessionUser, isLoading: sessionLoading } = useSessionUser()
   const updateUserMutation = useUpdateUser()
 
-  const handleUseLocation = async () => {
-    try {
-      setLocating(true)
-      const { latitude, longitude } = await getCurrentPosition()
-      // Snap to the nearest supported city (mock dataset has SP + Ribeirão only).
-      let nearest = CITIES[0]
-      let best = Infinity
-      for (const city of CITIES) {
-        const [lat, lng] = CITY_COORDS[city]
-        const dist = (lat - latitude) ** 2 + (lng - longitude) ** 2
-        if (dist < best) {
-          best = dist
-          nearest = city
-        }
-      }
-      setSelectedCity(nearest)
-      toast(`Achamos você perto de ${nearest}! 📍`, 'success')
-    } catch {
-      toast('Não rolou pegar sua localização', 'error')
-    } finally {
-      setLocating(false)
+  // Onboarding only makes sense for a signed-in user (their profile is what we
+  // write to). If a backend is configured but there's no session, go sign in.
+  useEffect(() => {
+    if (isSupabaseConfigured && !sessionLoading && !sessionUser) {
+      navigate('/auth', { replace: true })
     }
-  }
+  }, [sessionLoading, sessionUser, navigate])
 
   const handleNext = () => {
     if (step < STEPS.DONE) {
@@ -118,7 +95,8 @@ export function OnboardingScreen() {
         cpfValid: true,
         preferences: {
           ...sessionUser.preferences,
-          defaultCity: selectedCity,
+          defaultCity: selectedCity || null,
+          defaultState: selectedUf || null,
           slangLevel: SlangLevel.HIGH, // Default high slang for Gen Z feel
         }
       }
@@ -226,40 +204,20 @@ export function OnboardingScreen() {
                 <p className="text-sm text-[#A0A0A0]">Bota seu radar no lugar certo.</p>
               </div>
 
-              <div className="space-y-4">
-                <div className="grid gap-3">
-                  {CITIES.map((city) => (
-                    <button
-                      key={city}
-                      onClick={() => setSelectedCity(city)}
-                      className={`flex items-center justify-between rounded-xl border-2 px-4 py-4 font-bold transition-all ${
-                        selectedCity === city
-                          ? 'border-primary bg-primary/10 text-white'
-                          : 'border-[#2D2D2D] bg-[#1A1A1A] text-[#A0A0A0]'
-                      }`}
-                    >
-                      <span>{city}</span>
-                      <MapPin size={18} className={selectedCity === city ? 'text-primary' : 'text-[#A0A0A0]'} />
-                    </button>
-                  ))}
-                </div>
-
-                <Button
-                  variant="outline"
-                  onClick={handleUseLocation}
-                  disabled={locating}
-                  className="w-full flex items-center justify-center gap-2 border-[#2D2D2D] bg-[#1A1A1A] text-xs font-semibold rounded-xl py-4"
-                >
-                  <MapPin size={14} />
-                  <span>{locating ? 'Buscando localização…' : copy.onboarding.useLocation}</span>
-                </Button>
-              </div>
+              <LocationPicker
+                uf={selectedUf || null}
+                city={selectedCity || null}
+                onChange={({ uf, city }) => {
+                  setSelectedUf(uf)
+                  setSelectedCity(city)
+                }}
+              />
 
               <div className="flex gap-3">
                 <Button variant="outline" onClick={handleBack} className="flex-1 rounded-full border-[#2D2D2D] hover:bg-[#1A1A1A]">
                   Voltar
                 </Button>
-                <Button onClick={handleNext} className="flex-1 rounded-full">
+                <Button onClick={handleNext} disabled={!selectedUf || !selectedCity} className="flex-1 rounded-full">
                   Próximo
                 </Button>
               </div>
