@@ -119,16 +119,63 @@ export class SupabaseUserRepository implements UserRepository {
     return mapUser(data)
   }
   async observeFollowing(userId: string): Promise<User[]> {
+    const ids = await this.getFollowingIds(userId)
+    if (ids.length === 0) return []
+    const data = ok(await supabase.from('users').select('*').in('id', ids))
+    return (data ?? []).map(mapUser)
+  }
+  async searchUsers(query: string): Promise<User[]> {
+    const q = query.trim().replace(/[%,]/g, '')
+    if (!q) return []
+    const data = ok(
+      await supabase
+        .from('users')
+        .select('*')
+        .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
+        .limit(25)
+    )
+    return (data ?? []).map(mapUser)
+  }
+  async getSuggestedUsers(excludeId: string): Promise<User[]> {
+    const data = ok(
+      await supabase
+        .from('users')
+        .select('*')
+        .neq('id', excludeId)
+        .order('created_at', { ascending: false })
+        .limit(20)
+    )
+    return (data ?? []).map(mapUser)
+  }
+  async followUser(followerId: string, followingId: string): Promise<void> {
+    if (followerId === followingId) return
+    // Counts are kept in sync by the sync_follow_counts trigger (see schema.sql).
+    ok(
+      await supabase
+        .from('follows')
+        .upsert(
+          { follower_id: followerId, following_id: followingId },
+          { onConflict: 'follower_id,following_id', ignoreDuplicates: true }
+        )
+    )
+  }
+  async unfollowUser(followerId: string, followingId: string): Promise<void> {
+    ok(
+      await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', followerId)
+        .eq('following_id', followingId)
+    )
+  }
+  async getFollowingIds(userId: string): Promise<string[]> {
     const rows = ok(
       await supabase
         .from('follows')
         .select('following_id')
         .eq('follower_id', userId)
     )
-    const ids = (rows ?? []).map((r: any) => r.following_id)
-    if (ids.length === 0) return []
-    const data = ok(await supabase.from('users').select('*').in('id', ids))
-    return (data ?? []).map(mapUser)
+    return (rows ?? []).map((r: any) => r.following_id)
   }
 }
 

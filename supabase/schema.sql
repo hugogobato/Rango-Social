@@ -268,6 +268,26 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Keep users.follower_count / following_count in sync with the follows table.
+-- (RLS only lets a user update their OWN row, so counts must be maintained here.)
+create or replace function public.sync_follow_counts()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if (tg_op = 'INSERT') then
+    update public.users set following_count = following_count + 1 where id = new.follower_id;
+    update public.users set follower_count  = follower_count  + 1 where id = new.following_id;
+  elsif (tg_op = 'DELETE') then
+    update public.users set following_count = greatest(following_count - 1, 0) where id = old.follower_id;
+    update public.users set follower_count  = greatest(follower_count  - 1, 0) where id = old.following_id;
+  end if;
+  return null;
+end $$;
+
+drop trigger if exists on_follow_change on public.follows;
+create trigger on_follow_change
+  after insert or delete on public.follows
+  for each row execute function public.sync_follow_counts();
+
 -- Keep reviews.likes in sync with review_likes.
 create or replace function public.sync_review_likes()
 returns trigger language plpgsql security definer set search_path = public as $$

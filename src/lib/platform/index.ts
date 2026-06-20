@@ -6,5 +6,5 @@
  */
 export { storage } from './storage'
 export { getCurrentPosition, type Coordinates } from './geolocation'
-export { pickPhoto } from './camera'
+export { pickPhoto, takePhoto, pickFromLibrary } from './camera'
 export { shareContent, type SharePayload, type ShareResult } from './share'

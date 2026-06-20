@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { X, Eye, Camera, MapPin } from 'lucide-react'
+import { X, Eye, Camera, MapPin, ImageIcon } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Sheet } from '../../components/ui/Sheet'
@@ -13,7 +13,7 @@ import {
   useMarkStoryViewed,
   useRestaurants,
 } from '../../lib/query/hooks'
-import { pickPhoto } from '../../lib/platform'
+import { takePhoto, pickFromLibrary } from '../../lib/platform'
 import { copy } from '../../copy/pt-BR'
 
 export function StoriesScreen() {
@@ -34,7 +34,8 @@ export function StoriesScreen() {
   const [caption, setCaption] = useState('')
   const [taggedRestaurantId, setTaggedRestaurantId] = useState('')
   const [isViewersOpen, setIsViewersOpen] = useState(false)
-  const [imageUrl, setImageUrl] = useState('https://picsum.photos/seed/storygen/1080/1920')
+  // null until the user actually captures/picks a photo — no fake placeholder.
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
 
   // Story autoplay interval
   useEffect(() => {
@@ -84,8 +85,13 @@ export function StoriesScreen() {
     }
   }
 
-  const handlePickPhoto = async () => {
-    const photo = await pickPhoto()
+  const handleTakePhoto = async () => {
+    const photo = await takePhoto()
+    if (photo) setImageUrl(photo)
+  }
+
+  const handlePickFromLibrary = async () => {
+    const photo = await pickFromLibrary()
     if (photo) setImageUrl(photo)
   }
 
@@ -100,6 +106,10 @@ export function StoriesScreen() {
 
   const handleCreate = async () => {
     if (!sessionUser) return
+    if (!imageUrl) {
+      toast('Escolhe uma foto pra postar o story 📸', 'error')
+      return
+    }
     try {
       await postStoryMutation.mutateAsync({
         userId: sessionUser.id,
@@ -111,6 +121,7 @@ export function StoriesScreen() {
       closeComposer()
       setCaption('')
       setTaggedRestaurantId('')
+      setImageUrl(null)
       setCurrentIndex(0)
       setProgress(0)
     } catch {
@@ -135,15 +146,44 @@ export function StoriesScreen() {
         </div>
 
         <Card className="border-[#2D2D2D] bg-[#1A1A1A] p-4 space-y-4">
-          <div className="h-60 rounded-xl bg-[#242424] border border-[#2D2D2D] relative overflow-hidden flex items-center justify-center">
-            <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
-            <button
-              onClick={handlePickPhoto}
-              className="absolute bottom-3 right-3 bg-[#0F0F0F]/80 text-[10px] text-white font-extrabold px-3 py-1.5 rounded-full hover:bg-black"
-            >
-              📸 Trocar Foto
-            </button>
-          </div>
+          {imageUrl ? (
+            <div className="h-72 rounded-xl bg-[#242424] border border-[#2D2D2D] relative overflow-hidden flex items-center justify-center">
+              <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+              <div className="absolute bottom-3 right-3 flex gap-2">
+                <button
+                  onClick={handleTakePhoto}
+                  className="bg-[#0F0F0F]/80 text-[10px] text-white font-extrabold px-3 py-1.5 rounded-full hover:bg-black flex items-center gap-1"
+                >
+                  <Camera size={12} /> Câmera
+                </button>
+                <button
+                  onClick={handlePickFromLibrary}
+                  className="bg-[#0F0F0F]/80 text-[10px] text-white font-extrabold px-3 py-1.5 rounded-full hover:bg-black flex items-center gap-1"
+                >
+                  <ImageIcon size={12} /> Galeria
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="h-72 rounded-xl bg-[#242424] border border-dashed border-[#3D3D3D] flex flex-col items-center justify-center gap-3 p-4">
+              <p className="text-[11px] text-[#808080]">Bora postar um story? Escolhe a foto 👇</p>
+              <div className="flex gap-2 w-full">
+                <Button
+                  onClick={handleTakePhoto}
+                  className="flex-1 rounded-full text-xs bg-gradient-to-tr from-primary to-[#FF8C61]"
+                >
+                  <Camera size={14} className="mr-1.5" /> Tirar foto
+                </Button>
+                <Button
+                  onClick={handlePickFromLibrary}
+                  variant="outline"
+                  className="flex-1 rounded-full text-xs border-[#3D3D3D] hover:bg-[#242424]"
+                >
+                  <ImageIcon size={14} className="mr-1.5" /> Galeria
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-[#A0A0A0]">Legenda do Story (opcional)</label>
@@ -177,8 +217,8 @@ export function StoriesScreen() {
 
           <Button
             onClick={handleCreate}
-            disabled={postStoryMutation.isPending}
-            className="w-full rounded-full bg-gradient-to-tr from-primary to-[#FF8C61]"
+            disabled={postStoryMutation.isPending || !imageUrl}
+            className="w-full rounded-full bg-gradient-to-tr from-primary to-[#FF8C61] disabled:opacity-50"
           >
             {postStoryMutation.isPending ? 'Lançando…' : 'Lançar Story 🚀'}
           </Button>

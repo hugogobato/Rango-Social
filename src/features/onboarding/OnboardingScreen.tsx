@@ -7,7 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { toast } from '../../components/ui/Toast'
 import { validateCpf, formatCpf } from '../../domain/logic/cpf'
 import { copy } from '../../copy/pt-BR'
-import { useUpdateUser, useSessionUser } from '../../lib/query/hooks'
+import {
+  useUpdateUser,
+  useSessionUser,
+  useSuggestedUsers,
+  useToggleFollow,
+} from '../../lib/query/hooks'
 import { SlangLevel } from '../../domain/models'
 import { isSupabaseConfigured } from '../../data/supabase/client'
 import { LocationPicker } from '../../components/shared/LocationPicker'
@@ -28,12 +33,6 @@ const STYLES = [
   { id: 'BARATIN', title: '💸 Baratin', desc: 'Focado no custo-benefício, rango bom e barato.' },
 ]
 
-const MOCK_INFLUENCERS = [
-  { id: 'u_dudacomida', name: 'Duda Piva', username: 'dudacomida', bio: 'Só rango fino e review sem filtro 💅' },
-  { id: 'u_pedroleitao', name: 'Pedro Leitão', username: 'pedroleitao', bio: 'Boca livre profissional. Amasso sem dó 🐷' },
-  { id: 'u_gaby', name: 'Gaby Reis', username: 'gaby_eats', bio: 'Comida boa, barata e aesthetic ✨' },
-]
-
 export function OnboardingScreen() {
   const navigate = useNavigate()
   const [step, setStep] = useState(STEPS.WELCOME)
@@ -45,6 +44,9 @@ export function OnboardingScreen() {
 
   const { data: sessionUser, isLoading: sessionLoading } = useSessionUser()
   const updateUserMutation = useUpdateUser()
+  const { data: suggestedUsers, isLoading: suggestionsLoading } =
+    useSuggestedUsers(sessionUser?.id ?? '')
+  const toggleFollowMutation = useToggleFollow()
 
   // Onboarding only makes sense for a signed-in user (their profile is what we
   // write to). If a backend is configured but there's no session, go sign in.
@@ -79,9 +81,17 @@ export function OnboardingScreen() {
   }
 
   const toggleFollow = (id: string) => {
-    setFollowing(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    if (!sessionUser) return
+    const willFollow = !following.includes(id)
+    setFollowing((prev) =>
+      willFollow ? [...prev, id] : prev.filter((item) => item !== id)
     )
+    // Persist immediately so the follow survives onboarding.
+    toggleFollowMutation.mutate({
+      followerId: sessionUser.id,
+      followingId: id,
+      follow: willFollow,
+    })
   }
 
   const handleFinish = async () => {
@@ -288,42 +298,55 @@ export function OnboardingScreen() {
               </div>
 
               <div className="space-y-3">
-                {MOCK_INFLUENCERS.map((influencer) => {
-                  const isFollowing = following.includes(influencer.id)
-                  return (
-                    <div
-                      key={influencer.id}
-                      className="flex items-center justify-between rounded-xl bg-[#1A1A1A] p-4 border border-[#2D2D2D]"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-secondary to-[#A391FF] text-white font-extrabold text-sm">
-                          {influencer.name.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-white">{influencer.name}</p>
-                          <p className="text-xs text-[#A0A0A0]">@{influencer.username}</p>
-                          <p className="mt-1 text-[11px] text-[#808080] line-clamp-1">{influencer.bio}</p>
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant={isFollowing ? 'outline' : 'primary'}
-                        onClick={() => toggleFollow(influencer.id)}
-                        className={`rounded-full text-xs h-8 ${
-                          isFollowing ? 'border-[#2D2D2D] hover:bg-transparent text-[#A0A0A0]' : 'px-4'
-                        }`}
+                {suggestionsLoading ? (
+                  <p className="py-6 text-center text-xs text-[#808080]">Buscando a galera…</p>
+                ) : !suggestedUsers || suggestedUsers.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-[#2D2D2D] bg-[#1A1A1A] p-6 text-center">
+                    <p className="text-sm font-bold text-white">Você é dos primeiros! 🎉</p>
+                    <p className="mt-1 text-xs text-[#808080]">
+                      Convida teus amigos pra testar e segue eles aqui depois.
+                    </p>
+                  </div>
+                ) : (
+                  suggestedUsers.map((person) => {
+                    const isFollowing = following.includes(person.id)
+                    return (
+                      <div
+                        key={person.id}
+                        className="flex items-center justify-between rounded-xl bg-[#1A1A1A] p-4 border border-[#2D2D2D]"
                       >
-                        {isFollowing ? (
-                          <span className="flex items-center gap-1">
-                            <Check size={12} /> Seguindo
-                          </span>
-                        ) : (
-                          'Seguir'
-                        )}
-                      </Button>
-                    </div>
-                  )
-                })}
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-secondary to-[#A391FF] text-white font-extrabold text-sm">
+                            {person.displayName.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white">{person.displayName}</p>
+                            <p className="text-xs text-[#A0A0A0]">@{person.username}</p>
+                            {person.bio && (
+                              <p className="mt-1 text-[11px] text-[#808080] line-clamp-1">{person.bio}</p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={isFollowing ? 'outline' : 'primary'}
+                          onClick={() => toggleFollow(person.id)}
+                          className={`rounded-full text-xs h-8 ${
+                            isFollowing ? 'border-[#2D2D2D] hover:bg-transparent text-[#A0A0A0]' : 'px-4'
+                          }`}
+                        >
+                          {isFollowing ? (
+                            <span className="flex items-center gap-1">
+                              <Check size={12} /> Seguindo
+                            </span>
+                          ) : (
+                            'Seguir'
+                          )}
+                        </Button>
+                      </div>
+                    )
+                  })
+                )}
               </div>
 
               <div className="flex gap-3">

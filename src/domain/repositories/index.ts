@@ -25,6 +25,14 @@ export interface UserRepository {
   getUserById(id: string): Promise<User | null>
   updateUser(user: User): Promise<User>
   observeFollowing(userId: string): Promise<User[]>
+  /** Search users by @username or display name (for finding friends). */
+  searchUsers(query: string): Promise<User[]>
+  /** People to suggest following — excludes the given user. */
+  getSuggestedUsers(excludeId: string): Promise<User[]>
+  followUser(followerId: string, followingId: string): Promise<void>
+  unfollowUser(followerId: string, followingId: string): Promise<void>
+  /** Ids the given user currently follows (to drive follow/unfollow buttons). */
+  getFollowingIds(userId: string): Promise<string[]>
 }
 
 export interface RestaurantRepository {

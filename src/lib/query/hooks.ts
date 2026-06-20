@@ -46,6 +46,55 @@ export function useFollowing(userId: string) {
   })
 }
 
+export function useSearchUsers(query: string) {
+  return useQuery({
+    queryKey: ['searchUsers', query],
+    queryFn: () => db.users.searchUsers(query),
+    enabled: query.trim().length > 0,
+  })
+}
+
+export function useSuggestedUsers(excludeId: string) {
+  return useQuery({
+    queryKey: ['suggestedUsers', excludeId],
+    queryFn: () => db.users.getSuggestedUsers(excludeId),
+    enabled: !!excludeId,
+  })
+}
+
+export function useFollowingIds(userId: string) {
+  return useQuery({
+    queryKey: ['followingIds', userId],
+    queryFn: () => db.users.getFollowingIds(userId),
+    enabled: !!userId,
+  })
+}
+
+export function useToggleFollow() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      followerId,
+      followingId,
+      follow,
+    }: {
+      followerId: string
+      followingId: string
+      follow: boolean
+    }) =>
+      follow
+        ? db.users.followUser(followerId, followingId)
+        : db.users.unfollowUser(followerId, followingId),
+    onSuccess: (_, { followerId, followingId }) => {
+      queryClient.invalidateQueries({ queryKey: ['followingIds', followerId] })
+      queryClient.invalidateQueries({ queryKey: ['following', followerId] })
+      queryClient.invalidateQueries({ queryKey: ['users', followingId] })
+      queryClient.invalidateQueries({ queryKey: ['users', followerId] })
+      queryClient.invalidateQueries({ queryKey: ['sessionUser'] })
+    },
+  })
+}
+
 // ==========================================
 // RESTAURANT HOOKS
 // ==========================================

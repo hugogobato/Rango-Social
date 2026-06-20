@@ -1,7 +1,11 @@
 /**
- * Seed a Supabase project from the in-memory mock fixtures.
+ * OPTIONAL demo seeder — loads the in-memory mock fixtures (fake influencers,
+ * reviews, restaurants, groups, lists, etc.) into a Supabase project.
  *
- *   npm run seed          (or: npx tsx scripts/seed-supabase.ts)
+ * By default this does NOTHING: the app ships as a blank slate so real users
+ * create their own content. Pass SEED_DEMO=1 to load the demo fixtures:
+ *
+ *   SEED_DEMO=1 npm run seed     (or: SEED_DEMO=1 npx tsx scripts/seed-supabase.ts)
  *
  * Reads VITE_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY from .env.local. The
  * service_role key bypasses RLS, so this runs server-side ONLY — never ship it
@@ -210,7 +214,15 @@ async function upsert(
 // Run (FK-respecting order)
 // ---------------------------------------------------------------------------
 async function main() {
-  console.log(`Seeding ${url} …`)
+  if (env.SEED_DEMO !== '1' && process.env.SEED_DEMO !== '1') {
+    console.log(
+      'Skipping demo seed (blank-slate default).\n' +
+        'To load the fake demo fixtures anyway, run: SEED_DEMO=1 npm run seed'
+    )
+    return
+  }
+
+  console.log(`Seeding DEMO fixtures into ${url} …`)
 
   await upsert('users', allUsers.map(userToRow), 'id')
   await upsert('restaurants', restaurants.map(restaurantToRow), 'id')

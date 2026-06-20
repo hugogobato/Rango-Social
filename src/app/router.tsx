@@ -15,6 +15,7 @@ const RankingScreen = lazyScreen(() => import('../features/ranking/RankingScreen
 const ReviewFlowScreen = lazyScreen(() => import('../features/review/ReviewFlowScreen'), 'ReviewFlowScreen')
 const NotificationsScreen = lazyScreen(() => import('../features/notifications/NotificationsScreen'), 'NotificationsScreen')
 const ProfileScreen = lazyScreen(() => import('../features/profile/ProfileScreen'), 'ProfileScreen')
+const FindFriendsScreen = lazyScreen(() => import('../features/profile/FindFriendsScreen'), 'FindFriendsScreen')
 const AiAgentScreen = lazyScreen(() => import('../features/ai/AiAgentScreen'), 'AiAgentScreen')
 const OnboardingScreen = lazyScreen(() => import('../features/onboarding/OnboardingScreen'), 'OnboardingScreen')
 const AuthScreen = lazyScreen(() => import('../features/auth/AuthScreen'), 'AuthScreen')
@@ -59,6 +60,7 @@ export const router = createBrowserRouter([
       { path: 'notifications', element: <NotificationsScreen /> },
       { path: 'profile', element: <ProfileScreen /> },
       { path: 'profile/:userId', element: <ProfileScreen /> },
+      { path: 'find-friends', element: <FindFriendsScreen /> },
       { path: 'ai', element: <AiAgentScreen /> },
       { path: 'settings', element: <SettingsScreen /> },
       { path: 'badges/:userId', element: <BadgesScreen /> },

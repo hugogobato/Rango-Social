@@ -1,20 +1,41 @@
 import { useParams, Link } from 'react-router-dom'
-import { Settings, Trophy, UserCheck } from 'lucide-react'
+import { Settings, Trophy, UserCheck, UserPlus } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Tabs'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
-import { useUser, useSessionUser, useReviews } from '../../lib/query/hooks'
+import { toast } from '../../components/ui/Toast'
+import {
+  useUser,
+  useSessionUser,
+  useReviews,
+  useFollowingIds,
+  useToggleFollow,
+} from '../../lib/query/hooks'
 
 export function ProfileScreen() {
   const { userId } = useParams<{ userId?: string }>()
   const { data: sessionUser } = useSessionUser()
-  
+
   const targetId = userId || sessionUser?.id || 'u_me'
   const isMe = targetId === sessionUser?.id
 
   const { data: user, isLoading: isUserLoading } = useUser(targetId)
   const { data: reviews, isLoading: isReviewsLoading } = useReviews({ userId: targetId })
+  const { data: followingIds } = useFollowingIds(sessionUser?.id ?? '')
+  const toggleFollow = useToggleFollow()
+
+  const isFollowing = !!followingIds?.includes(targetId)
+
+  const handleToggleFollow = () => {
+    if (!sessionUser) return
+    toggleFollow.mutate(
+      { followerId: sessionUser.id, followingId: targetId, follow: !isFollowing },
+      {
+        onError: () => toast('Deu ruim, tenta de novo.', 'error'),
+      }
+    )
+  }
 
   if (isUserLoading) {
     return <div className="text-center py-10 text-xs text-[#808080]">Carregando perfil…</div>
@@ -81,8 +102,25 @@ export function ProfileScreen() {
               </Link>
             </>
           ) : (
-            <Button className="w-full rounded-full text-xs h-9">
-              <UserCheck size={13} className="mr-1.5" /> Seguir
+            <Button
+              onClick={handleToggleFollow}
+              disabled={toggleFollow.isPending}
+              variant={isFollowing ? 'outline' : 'primary'}
+              className={
+                isFollowing
+                  ? 'w-full rounded-full text-xs h-9 border-[#2D2D2D] text-[#A0A0A0] hover:bg-transparent'
+                  : 'w-full rounded-full text-xs h-9'
+              }
+            >
+              {isFollowing ? (
+                <>
+                  <UserCheck size={13} className="mr-1.5" /> Seguindo
+                </>
+              ) : (
+                <>
+                  <UserPlus size={13} className="mr-1.5" /> Seguir
+                </>
+              )}
             </Button>
           )}
         </div>
@@ -91,6 +129,9 @@ export function ProfileScreen() {
       {/* Grid of Profile Actions / Links */}
       {isMe && (
         <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+          <Link to="/find-friends" className="flex items-center gap-2 p-3 bg-[#1A1A1A] border border-[#2D2D2D] rounded-xl hover:border-[#444] transition-all">
+            🔎 Achar amigos
+          </Link>
           <Link to="/groups" className="flex items-center gap-2 p-3 bg-[#1A1A1A] border border-[#2D2D2D] rounded-xl hover:border-[#444] transition-all">
             👥 Minhas Tropas
           </Link>

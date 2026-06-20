@@ -184,6 +184,7 @@ let restaurantDuelsState: RestaurantDuel[] = []
 let cuisineElosState: CuisineElo[] = []
 let aiUserProfilesState: AiUserProfile[] = []
 let aiChatMessagesState: AiChatMessage[] = []
+let followsState: Array<{ follower: string; following: string }> = []
 
 // ==========================================
 // MOCK IMPLEMENTATIONS
@@ -201,7 +202,51 @@ export class MockUserRepository implements UserRepository {
     return user
   }
   async observeFollowing(userId: string): Promise<User[]> {
-    return usersState.filter((u) => u.id !== userId).slice(0, 4)
+    const ids = followsState
+      .filter((f) => f.follower === userId)
+      .map((f) => f.following)
+    if (ids.length === 0) {
+      // Demo fallback so the mock feed isn't empty before any follow is made.
+      return usersState.filter((u) => u.id !== userId).slice(0, 4)
+    }
+    return usersState.filter((u) => ids.includes(u.id))
+  }
+  async searchUsers(query: string): Promise<User[]> {
+    const q = query.trim().toLowerCase()
+    if (!q) return []
+    return usersState
+      .filter(
+        (u) =>
+          u.username.toLowerCase().includes(q) ||
+          u.displayName.toLowerCase().includes(q)
+      )
+      .slice(0, 25)
+  }
+  async getSuggestedUsers(excludeId: string): Promise<User[]> {
+    return usersState.filter((u) => u.id !== excludeId).slice(0, 20)
+  }
+  async followUser(followerId: string, followingId: string): Promise<void> {
+    if (followerId === followingId) return
+    if (
+      !followsState.some(
+        (f) => f.follower === followerId && f.following === followingId
+      )
+    ) {
+      followsState = [
+        ...followsState,
+        { follower: followerId, following: followingId },
+      ]
+    }
+  }
+  async unfollowUser(followerId: string, followingId: string): Promise<void> {
+    followsState = followsState.filter(
+      (f) => !(f.follower === followerId && f.following === followingId)
+    )
+  }
+  async getFollowingIds(userId: string): Promise<string[]> {
+    return followsState
+      .filter((f) => f.follower === userId)
+      .map((f) => f.following)
   }
 }
 
