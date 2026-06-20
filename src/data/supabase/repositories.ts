@@ -75,14 +75,17 @@ const nowIso = () => new Date().toISOString()
 const daysAgoIso = (d: number) =>
   new Date(Date.now() - d * 24 * 60 * 60 * 1000).toISOString()
 
-// PostgREST embed graphs reused across queries.
+// PostgREST embed graphs reused across queries. `users` is embedded via an
+// explicit FK-constraint hint (e.g. !reviews_user_id_fkey) because reviews and
+// notifications have multiple relationships to users (author/actor + junctions
+// via comments/review_likes), which PostgREST refuses to embed ambiguously.
 const REVIEW_SELECT =
-  '*, author:users(*), restaurant:restaurants(*), comments(*, author:users(*))'
+  '*, author:users!reviews_user_id_fkey(*), restaurant:restaurants(*), comments(*, author:users!comments_user_id_fkey(*))'
 const GROUP_SELECT = '*, group_members(*, member:users(*))'
 const LIST_SELECT = '*, list_items(*, restaurant:restaurants(*))'
 const STORY_SELECT = '*, author:users(*), restaurant:restaurants(*)'
 const NOTIFICATION_SELECT =
-  '*, actor:users(*), target_review:reviews(*), target_restaurant:restaurants(*), target_group:groups(*), target_list:custom_lists(*)'
+  '*, actor:users!notifications_actor_id_fkey(*), target_review:reviews(*), target_restaurant:restaurants(*), target_group:groups(*), target_list:custom_lists(*)'
 
 /** Set of review ids the current user has liked, scoped to the given ids. */
 async function likedSet(reviewIds: string[]): Promise<Set<string>> {

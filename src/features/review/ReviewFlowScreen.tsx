@@ -14,6 +14,7 @@ import { MetricId, RestaurantCategory, PriceRange } from '../../domain/models'
 import { getUnionOfMetrics } from '../../domain/logic/metrics-union'
 import { copy } from '../../copy/pt-BR'
 import { takePhoto, pickFromLibrary } from '../../lib/platform'
+import { uploadImages } from '../../data/supabase/storage'
 import confetti from 'canvas-confetti'
 
 // pt-BR labels + the standard metrics every review can rate (optional), shown
@@ -225,6 +226,12 @@ export function ReviewFlowScreen() {
     let finalRestaurantId = values.restaurantId || ''
     let cuisineType = RestaurantCategory.PODRAO
 
+    // Upload photos to Supabase Storage up front; reuse the public URLs for both
+    // the new-restaurant record and the review (falls back to inline if Storage
+    // is unreachable).
+    const uploadedPhotos =
+      photos.length > 0 ? await uploadImages(photos, `reviews/${sessionUser.id}`) : []
+
     // 1. Register Lugar Novo if applicable
     if (values.isNewRestaurant) {
       const newId = `r_${Math.random().toString(36).substring(2, 9)}`
@@ -249,7 +256,7 @@ export function ReviewFlowScreen() {
         phone: null,
         website: null,
         openingHours: null,
-        photos: photos.length > 0 ? photos : [],
+        photos: uploadedPhotos,
         menuPhotos: [],
         averageOverallScore: values.overallScore,
         averageMetrics: {
@@ -309,7 +316,7 @@ export function ReviewFlowScreen() {
       overallScore: values.overallScore,
       visitDate: values.visitDate,
       comment: values.comment || null,
-      photos,
+      photos: uploadedPhotos,
       companions: selectedCompanions,
       targetDestinations: satisfiedDestinations,
       receiptPhoto: null,

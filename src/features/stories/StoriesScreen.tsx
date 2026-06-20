@@ -14,6 +14,7 @@ import {
   useRestaurants,
 } from '../../lib/query/hooks'
 import { takePhoto, pickFromLibrary } from '../../lib/platform'
+import { uploadImage } from '../../data/supabase/storage'
 import { copy } from '../../copy/pt-BR'
 
 export function StoriesScreen() {
@@ -111,9 +112,16 @@ export function StoriesScreen() {
       return
     }
     try {
+      // Upload to Supabase Storage; fall back to the inline data URL on failure.
+      let photoUrl = imageUrl
+      try {
+        photoUrl = await uploadImage(imageUrl, `stories/${sessionUser.id}`)
+      } catch (e) {
+        console.warn('Story photo upload failed, storing inline:', e)
+      }
       await postStoryMutation.mutateAsync({
         userId: sessionUser.id,
-        photoUrl: imageUrl,
+        photoUrl,
         caption: caption || undefined,
         restaurantId: taggedRestaurantId || undefined,
       })
@@ -269,11 +277,17 @@ export function StoriesScreen() {
         {/* User Info */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary/20 border-2 border-primary text-white flex items-center justify-center font-bold text-xs uppercase">
-              {currentStory.userId.replace('u_', '').slice(0, 2)}
+            <div className="h-8 w-8 rounded-full bg-primary/20 border-2 border-primary text-white flex items-center justify-center font-bold text-xs uppercase overflow-hidden">
+              {currentStory.user?.avatarUrl ? (
+                <img src={currentStory.user.avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                (currentStory.user?.displayName ?? 'U').slice(0, 2)
+              )}
             </div>
             <div>
-              <p className="text-xs font-black text-white">@{currentStory.userId.replace('u_', '')}</p>
+              <p className="text-xs font-black text-white">
+                @{currentStory.user?.username ?? 'usuario'}
+              </p>
               <p className="text-[9px] text-white/70">
                 {new Date(currentStory.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
               </p>
