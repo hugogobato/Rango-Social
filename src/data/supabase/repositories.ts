@@ -267,18 +267,24 @@ export class SupabaseReviewRepository implements ReviewRepository {
   async postReview(
     review: Omit<Review, 'id' | 'createdAt' | 'likes' | 'comments' | 'isLikedByMe'>
   ): Promise<Review> {
+    // Insert with a plain `*` select (no embeds): embed resolution can fail on a
+    // fresh row / stale schema cache, which previously made the whole post throw
+    // even though the row landed. The feed/profile refetch hydrates author +
+    // restaurant afterwards.
     const data = ok(
       await supabase
         .from('reviews')
         .insert(reviewInsertToRow(review))
-        .select(REVIEW_SELECT)
+        .select('*')
         .single()
     )
     // Bump denormalized counters (RPC keeps fixture counts intact — see schema.sql).
-    await supabase.rpc('increment_review_counts', {
+    // Best-effort: never fail a posted review over a counter bump.
+    const { error: rpcError } = await supabase.rpc('increment_review_counts', {
       rid: review.restaurantId,
       uid: review.userId,
     })
+    if (rpcError) console.warn('increment_review_counts failed:', rpcError.message)
     return mapReview(data)
   }
   async toggleLike(reviewId: string, userId: string): Promise<boolean> {

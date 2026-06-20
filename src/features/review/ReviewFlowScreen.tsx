@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Calendar, Users, DollarSign, Trophy, Check, AlertTriangle } from 'lucide-react'
+import { Calendar, Users, DollarSign, Trophy, Check, AlertTriangle, Camera, Image as ImageIcon, X } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Dialog } from '../../components/ui/Dialog'
@@ -13,7 +13,32 @@ import { useReviewDraftStore } from '../../lib/store/reviewDraftStore'
 import { MetricId, RestaurantCategory, PriceRange } from '../../domain/models'
 import { getUnionOfMetrics } from '../../domain/logic/metrics-union'
 import { copy } from '../../copy/pt-BR'
+import { takePhoto, pickFromLibrary } from '../../lib/platform'
 import confetti from 'canvas-confetti'
+
+// pt-BR labels + the standard metrics every review can rate (optional), shown
+// regardless of which tropas/groups the review is posted to.
+const METRIC_LABELS: Partial<Record<MetricId, string>> = {
+  [MetricId.TASTE]: 'Sabor',
+  [MetricId.SERVICE]: 'Atendimento',
+  [MetricId.WAIT_TIME]: 'Tempo de Espera',
+  [MetricId.COST_BENEFIT]: 'Custo-benefício',
+  [MetricId.PORTION]: 'Fartura',
+  [MetricId.VIBE]: 'Ambiente / Vibe',
+  [MetricId.CLEANLINESS]: 'Limpeza',
+  [MetricId.DRINKS]: 'Bebidas',
+}
+const STANDARD_METRICS: MetricId[] = [
+  MetricId.TASTE,
+  MetricId.SERVICE,
+  MetricId.WAIT_TIME,
+  MetricId.COST_BENEFIT,
+  MetricId.PORTION,
+  MetricId.VIBE,
+  MetricId.CLEANLINESS,
+  MetricId.DRINKS,
+]
+const MAX_PHOTOS = 4
 
 // Zod Validation Schema
 const reviewSchema = z.object({
@@ -113,6 +138,9 @@ export function ReviewFlowScreen() {
   const [metricRatings, setMetricRatings] = useState<Record<string, number>>(
     draft.metrics
   )
+  // Real photos of the place (data URLs). Kept in local state only — base64 in the
+  // persisted draft would blow the localStorage quota.
+  const [photos, setPhotos] = useState<string[]>([])
 
   // Duel trigger popup state
   const [showDuelDialog, setShowDuelDialog] = useState(false)
@@ -177,6 +205,19 @@ export function ReviewFlowScreen() {
     setMetricRatings((prev) => ({ ...prev, [metric]: rating }))
   }
 
+  const handleAddPhoto = async (source: 'camera' | 'gallery') => {
+    if (photos.length >= MAX_PHOTOS) {
+      toast(`Máximo de ${MAX_PHOTOS} fotos, chef`, 'info')
+      return
+    }
+    const photo = source === 'camera' ? await takePhoto() : await pickFromLibrary()
+    if (photo) setPhotos((prev) => [...prev, photo])
+  }
+
+  const removePhoto = (idx: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== idx))
+  }
+
   // Final Publish Handler
   const onSubmitForm = async (values: ReviewFormValues) => {
     if (!sessionUser) return
@@ -208,7 +249,7 @@ export function ReviewFlowScreen() {
         phone: null,
         website: null,
         openingHours: null,
-        photos: ['https://picsum.photos/seed/restaurant/800/600'],
+        photos: photos.length > 0 ? photos : [],
         menuPhotos: [],
         averageOverallScore: values.overallScore,
         averageMetrics: {
@@ -268,7 +309,7 @@ export function ReviewFlowScreen() {
       overallScore: values.overallScore,
       visitDate: values.visitDate,
       comment: values.comment || null,
-      photos: ['https://picsum.photos/seed/review/600/400'],
+      photos,
       companions: selectedCompanions,
       targetDestinations: satisfiedDestinations,
       receiptPhoto: null,
@@ -317,8 +358,9 @@ export function ReviewFlowScreen() {
         navigate('/')
       }
 
-    } catch {
-      toast('Deu ruim ao postar review!', 'error')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Deu ruim ao postar review!'
+      toast(msg, 'error')
     }
   }
 
@@ -619,6 +661,88 @@ export function ReviewFlowScreen() {
                 </div>
               )}
 
+              {/* Standard optional metrics — always available (Sabor, Atendimento, etc.) */}
+              <div className="space-y-3 p-3 bg-[#242424]/40 border border-[#2D2D2D] rounded-xl">
+                <h4 className="text-[10px] font-bold text-[#808080] uppercase tracking-wider">
+                  Notas detalhadas (opcional)
+                </h4>
+                {STANDARD_METRICS.map((metric) => {
+                  const val = metricRatings[metric] ?? 0
+                  return (
+                    <div key={metric} className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-white">{METRIC_LABELS[metric]}</span>
+                      <div className="flex items-center gap-1.5">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => handleMetricRate(metric, n)}
+                            className="text-base leading-none"
+                            aria-label={`${METRIC_LABELS[metric]} ${n}`}
+                          >
+                            {n <= val ? '🌶️' : '⚪'}
+                          </button>
+                        ))}
+                        {val > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleMetricRate(metric, 0)}
+                            className="ml-0.5 text-[#666] hover:text-white"
+                            aria-label="Limpar nota"
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Photos of the place (camera or gallery) */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#A0A0A0] flex items-center gap-1.5">
+                  <ImageIcon size={13} /> Fotos do rolê (opcional)
+                </label>
+                {photos.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {photos.map((src, idx) => (
+                      <div key={idx} className="relative aspect-square overflow-hidden rounded-lg border border-[#2D2D2D]">
+                        <img src={src} alt={`Foto ${idx + 1}`} className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(idx)}
+                          className="absolute right-1 top-1 rounded-full bg-black/70 p-0.5 text-white hover:bg-black"
+                          aria-label="Remover foto"
+                        >
+                          <X size={11} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {photos.length < MAX_PHOTOS && (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleAddPhoto('camera')}
+                      className="flex-1 rounded-full border-[#2D2D2D] text-xs h-9"
+                    >
+                      <Camera size={13} className="mr-1.5" /> Tirar foto
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleAddPhoto('gallery')}
+                      className="flex-1 rounded-full border-[#2D2D2D] text-xs h-9"
+                    >
+                      <ImageIcon size={13} className="mr-1.5" /> Galeria
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               {/* Overall Score */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#A0A0A0]">Nota Geral</label>
@@ -690,6 +814,11 @@ export function ReviewFlowScreen() {
                 {formComment && (
                   <p>
                     <span className="font-bold text-white">💬 Mural:</span> "{formComment}"
+                  </p>
+                )}
+                {photos.length > 0 && (
+                  <p>
+                    <span className="font-bold text-white">📸 Fotos:</span> {photos.length}
                   </p>
                 )}
               </div>
