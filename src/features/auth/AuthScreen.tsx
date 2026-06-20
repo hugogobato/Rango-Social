@@ -56,10 +56,10 @@ export function AuthScreen() {
         }
         await signUpWithEmail({
           email: email.trim(),
+          // Store the handle bare (no leading @) — the UI adds the @ when showing it,
+          // so storing "@hugo" would render as "@@hugo".
+          username: username.trim().replace(/^@+/, ''),
           password,
-          username: username.trim().startsWith('@')
-            ? username.trim()
-            : `@${username.trim()}`,
           displayName: displayName.trim(),
           cpf: cpfDigits || undefined,
           cpfValid: cpfDigits ? cpfValid : undefined,
